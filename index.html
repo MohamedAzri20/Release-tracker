@@ -335,6 +335,13 @@
     #libGrid .grid .info .sub { font-size: 12px; }
     #libGrid .grid .card.lib .pill { top: 6px; left: 6px; font-size: 10px; padding: 1px 6px; }
   }
+  .eps { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 6px; }
+  .ep { padding: 0; height: 40px; border-radius: 10px; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .ep.done { background: rgba(89, 214, 196, .9); border-color: var(--teal); color: #05241f; }
+  .ep.done:hover { background: var(--teal); }
+  .ep.later { opacity: .35; border-style: dashed; }
+  .eps-help { margin: -2px 0 10px; }
+  button.markall { margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -417,7 +424,7 @@ var STATUS_ORDER = ['current', 'planning', 'completed', 'paused', 'dropped'];
 var MEDIA_FIELDS = 'id type format status isAdult countryOfOrigin episodes chapters siteUrl ' +
   'title{romaji english} coverImage{medium large extraLarge} startDate{year month day} nextAiringEpisode{airingAt episode}';
 var DETAIL_Q = 'query($id:Int){Media(id:$id){' + MEDIA_FIELDS + ' description(asHtml:false) genres averageScore ' +
-  'studios(isMain:true){nodes{name}} externalLinks{site url type} relations{edges{relationType node{' + MEDIA_FIELDS + '}}}}}';
+  'studios(isMain:true){nodes{name}} externalLinks{site url type} streamingEpisodes{title} relations{edges{relationType node{' + MEDIA_FIELDS + '}}}}}';
 var SEQ_Q = 'query($ids:[Int]){Page(perPage:25){media(id_in:$ids){id relations{edges{relationType node{' + MEDIA_FIELDS + '}}}}}}';
 var BATCH_Q = 'query($ids:[Int]){Page(perPage:50){media(id_in:$ids){' + MEDIA_FIELDS + '}}}';
 var MATCH_FIELDS = 'id title{romaji english} synonyms status format isAdult countryOfOrigin startDate{year}';
@@ -578,8 +585,8 @@ function alEntry(m) {
     id: 'al-' + m.id, src: 'al', kind: manga ? 'manga' : (m.isAdult ? 'adult' : 'anime'),
     title: t.english || t.romaji || 'Untitled',
     sub: parts.join(', '),
-    img: m.isAdult ? null : (c.extraLarge || c.large || c.medium || null),
-    thumb: m.isAdult ? null : (c.medium || c.large || null),
+    img: c.extraLarge || c.large || c.medium || null,
+    thumb: c.medium || c.large || null,
     url: m.siteUrl || ('https://anilist.co/' + (manga ? 'manga' : 'anime') + '/' + m.id),
     total: (manga ? m.chapters : m.episodes) || null,
     airStatus: m.status || null,
@@ -684,19 +691,25 @@ function removeFromLibrary(id) {
   byId.delete(id);
   saveList();
 }
+function cap(e) {
+  var a = avail(e);
+  if (a != null) return a;
+  return e.total || null;
+}
 function setProgress(item, value) {
   var v = Math.max(0, Math.floor(Number(value) || 0));
-  if (item.total) v = Math.min(v, item.total);
+  var c = cap(item);
+  if (c != null) v = Math.min(v, c);
   item.progress = v;
   if (v > 0 && (item.status === 'planning' || item.status === 'paused')) item.status = 'current';
-  if (item.total && v >= item.total) item.status = 'completed';
+  if (item.total && v >= item.total && item.airStatus !== 'RELEASING') item.status = 'completed';
   item.updatedAt = Date.now();
   saveList();
 }
 function setItemStatus(item, s) {
   if (STATUS_ORDER.indexOf(s) < 0) return;
   item.status = s;
-  if (s === 'completed' && item.total) item.progress = item.total;
+  if (s === 'completed' && cap(item) != null) item.progress = cap(item);
   item.updatedAt = Date.now();
   saveList();
 }
@@ -722,7 +735,7 @@ async function refreshList() {
     if (x.src !== 'al') return;
     var active = x.airStatus == null || x.airStatus === 'RELEASING' || x.airStatus === 'NOT_YET_RELEASED' || x.airStatus === 'HIATUS';
     if (active) ids.push(Number(x.id.slice(3)));
-    else if (!x.hyd && cold < 150) { ids.push(Number(x.id.slice(3))); cold++; }
+    else if ((!x.hyd || (x.kind === 'adult' && !x.img)) && cold < 150) { ids.push(Number(x.id.slice(3))); cold++; }
   });
   for (var i = 0; i < ids.length; i += 50) {
     if (i) await sleep(1500);
@@ -779,8 +792,12 @@ async function runSequelCheck(force) {
 }
 
 /* ---------- pieces of the page ---------- */
+function imgOf(e, small) {
+  if (e.kind === 'adult' && !settings.showAdult) return null;
+  return small ? (e.thumb || e.img || null) : (e.img || null);
+}
 function posterHtml(e, small) {
-  var src = small ? (e.thumb || e.img) : e.img;
+  var src = imgOf(e, small);
   return '<div class="poster">' + (src
     ? '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">'
     : '<div class="noimg">' + (e.kind === 'adult' ? '18+' : '') + '</div>') + '</div>';
@@ -865,7 +882,7 @@ function heroHtml(e) {
   var n = stateOf(e).next, d = new Date(n.at);
   remember(e);
   return '<section class="hero card k-' + esc(e.kind) + '" data-id="' + esc(e.id) + '" data-mode="hero">' +
-    (e.img ? '<img class="hero-bg" src="' + esc(e.img) + '" alt="" referrerpolicy="no-referrer">' : '') +
+    (imgOf(e) ? '<img class="hero-bg" src="' + esc(imgOf(e)) + '" alt="" referrerpolicy="no-referrer">' : '') +
     posterHtml(e) + '<div class="hero-body">' +
     '<p class="hero-line">Next up, <b>' + esc(n.label) + '</b> of</p>' + titleBtn(e, 'hero-title') +
     '<div class="hero-cd cd" data-at="' + n.at + '"' + (n.dateOnly ? ' data-day="1"' : '') + '>' + esc(n.dateOnly ? relDay(n.at) : rel(n.at)) + '</div>' +
@@ -1439,6 +1456,7 @@ function openDetail(id, mode) {
   detail.full = null;
   detail.error = null;
   detail.confirmRemove = false;
+  detail.epBlock = null;
   detail.token++;
   $('detail').classList.add('open');
   document.body.classList.add('noscroll');
@@ -1482,6 +1500,50 @@ async function loadDetail(token) {
   }
   drawDetail();
 }
+function epTitles() {
+  var map = {};
+  var f = detail.full;
+  ((f && f.streamingEpisodes) || []).forEach(function (s) {
+    var m = /^Episode\s+(\d+)\s*[-–:]\s*(.+)$/i.exec(s.title || '');
+    if (m && !map[m[1]]) map[m[1]] = m[2];
+  });
+  return map;
+}
+function epGridHtml(it) {
+  var a = avail(it);
+  var n = it.total || (a != null ? a : null);
+  if (!n) {
+    return '<section class="d-sec"><h3>' + (it.kind === 'manga' ? 'Chapters' : 'Episodes') + '</h3><p class="sub">' +
+      esc((it.kind === 'manga' ? 'The total number of chapters is not known yet' : 'The episode count is not known yet') +
+        ', so use the + and − buttons above.') + '</p></section>';
+  }
+  var block = 100, blocks = Math.ceil(n / block);
+  if (detail.epBlock == null || detail.epBlockFor !== it.id) {
+    detail.epBlockFor = it.id;
+    detail.epBlock = Math.min(blocks - 1, Math.floor(Math.max(0, it.progress || 0) / block));
+  }
+  var b = Math.min(detail.epBlock, blocks - 1), from = b * block + 1, to = Math.min(n, from + block - 1);
+  var names = epTitles(), word = it.kind === 'manga' ? 'Chapter' : 'Episode';
+  var h = '<section class="d-sec"><h3>' + (it.kind === 'manga' ? 'Chapters' : 'Episodes') + '</h3>' +
+    '<p class="sub eps-help">Tap the last one you ' + (it.kind === 'manga' ? 'read' : 'watched') + '. Everything before it is marked too.</p>';
+  if (blocks > 1) {
+    h += '<div class="tools">';
+    for (var k = 0; k < blocks; k++) {
+      h += '<button type="button" data-act="epblock" data-b="' + k + '" class="' + (k === b ? 'on' : '') + '">' +
+        (k * block + 1) + '–' + Math.min(n, (k + 1) * block) + '</button>';
+    }
+    h += '</div>';
+  }
+  h += '<div class="eps">';
+  for (var e = from; e <= to; e++) {
+    var done = e <= (it.progress || 0), out = a == null || e <= a;
+    var t = names[e] ? word + ' ' + e + ': ' + names[e] : word + ' ' + e;
+    h += '<button type="button" class="ep' + (done ? ' done' : '') + (out ? '' : ' later') + '" data-act="ep" data-n="' + e + '"' +
+      (out ? '' : ' disabled') + ' title="' + esc(t + (out ? '' : ' (not out yet)')) + '" aria-label="' + esc(t + (done ? ', watched' : out ? '' : ', not out yet')) + '"' +
+      (done ? ' aria-pressed="true"' : ' aria-pressed="false"') + '>' + e + '</button>';
+  }
+  return h + '</div></section>';
+}
 function drawDetail(focusAct) {
   var it = findItem(detail.id);
   var e = it || detail.entry;
@@ -1495,7 +1557,7 @@ function drawDetail(focusAct) {
   if (f && f.runtime) meta.push(f.runtime + ' min');
   var alt = f && f.title && f.title.romaji && norm(f.title.romaji) !== norm(e.title) ? f.title.romaji : '';
   var nx = nextHtml(st.next);
-  var h = '<div class="d-hero">' + (e.img ? '<img class="d-bg" src="' + esc(e.img) + '" alt="" referrerpolicy="no-referrer">' : '') +
+  var h = '<div class="d-hero">' + (imgOf(e) ? '<img class="d-bg" src="' + esc(imgOf(e)) + '" alt="" referrerpolicy="no-referrer">' : '') +
     '<div class="d-top k-' + esc(e.kind) + '">' + posterHtml(e) + '<div class="d-head"><h2 id="dTitle">' + esc(e.title) + '</h2>' +
     (alt ? '<div class="alt">' + esc(alt) + '</div>' : '') +
     '<div class="d-meta">' + esc(meta.join(', ')) + '</div>' +
@@ -1507,16 +1569,19 @@ function drawDetail(focusAct) {
     }).join('');
     h += '<section class="d-sec d-prog"><div class="d-row"><label for="dStatus">Status</label><select id="dStatus">' + choices + '</select></div>';
     if (it.kind !== 'movie') {
-      var a = avail(it);
+      var a = avail(it), c = cap(it);
       h += '<div class="stepper"><button type="button" data-act="dec" aria-label="One less">−</button>' +
-        '<input id="dProg" type="number" min="0"' + (it.total ? ' max="' + it.total + '"' : '') + ' inputmode="numeric" value="' + (it.progress || 0) +
+        '<input id="dProg" type="number" min="0"' + (c != null ? ' max="' + c + '"' : '') + ' inputmode="numeric" value="' + (it.progress || 0) +
         '" aria-label="' + (it.kind === 'manga' ? 'Chapters read' : 'Episodes watched') + '">' +
         '<button type="button" data-act="inc" aria-label="One more">+</button>' +
         '<span class="of">' + esc(it.total ? 'of ' + it.total + ' ' + unitWord(it, it.total) : unitWord(it, 2) + (it.kind === 'manga' ? ' read' : ' watched')) + '</span></div>' +
         (it.total ? '<div class="pbar big"><i style="width:' + pct(it) + '%"></i></div>' : '') +
-        (a != null && it.airStatus === 'RELEASING' ? '<p class="sub">' + esc(a + ' ' + unitWord(it, a) + ' out so far.') + '</p>' : '');
+        (a != null && it.airStatus === 'RELEASING' ? '<p class="sub">' + esc(a + ' ' + unitWord(it, a) + ' out so far.') + '</p>' : '') +
+        (c && (it.progress || 0) < c ? '<button type="button" class="wide markall" data-act="markall">Mark all ' + c + ' ' +
+          (it.airStatus === 'RELEASING' ? 'released ' : '') + unitWord(it, c) + ' as ' + (it.kind === 'manga' ? 'read' : 'watched') + '</button>' : '');
     }
     h += '</section>';
+    if (it.kind !== 'movie') h += epGridHtml(it);
   } else {
     h += '<section class="d-sec"><button type="button" class="primary wide" data-act="dadd">Add to my list</button></section>';
   }
@@ -1558,7 +1623,7 @@ function drawDetail(focusAct) {
     h += '<section class="d-sec"><h3>About</h3><p class="desc">' + esc(e.overview) + '</p></section>';
   }
   h += '<div class="d-foot"><span>' + (detail.stack.length ? '<button type="button" data-act="dback">Back</button> ' : '') +
-    '<a href="' + esc(e.url) + '" target="_blank" rel="noopener">Open on ' + (e.src === 'tm' ? 'TMDB' : 'AniList') + '</a></span>' +
+    '</span>' +
     (it ? '<button type="button" class="danger' + (detail.confirmRemove ? ' confirm' : '') + '" data-act="dremove">' +
       (detail.confirmRemove ? 'Press again to remove' : 'Remove from my list') + '</button>' : '') + '</div></div>';
   $('detailBody').innerHTML = h;
@@ -1726,6 +1791,24 @@ document.addEventListener('click', function (ev) {
       toast('Removed from your list.');
       detailChanged();
       return;
+    case 'ep': {
+      it = findItem(detail.id);
+      if (!it) return;
+      var en = Number(btn.dataset.n);
+      setProgress(it, en === (it.progress || 0) ? en - 1 : en);
+      detailChanged();
+      var again = $('detailBody').querySelector('.ep[data-n="' + en + '"]');
+      if (again) again.focus();
+      return;
+    }
+    case 'markall':
+      it = findItem(detail.id);
+      if (!it || cap(it) == null) return;
+      setProgress(it, cap(it));
+      toast(it.title + ': ' + progressText(it) + '.');
+      detailChanged();
+      return;
+    case 'epblock': detail.epBlock = Number(btn.dataset.b); drawDetail(); return;
     case 'dopen': openDetail(btn.dataset.id, 'push'); return;
     case 'dback': if (detail.stack.length) openDetail(detail.stack.pop(), 'back'); return;
   }
