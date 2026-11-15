@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Release Tracker</title>
+<style>
+  :root {
+    --bg: #12141a; --panel: #1b1e27; --panel2: #232733; --line: #2f3442;
+    --text: #e8eaf0; --muted: #98a0b3; --accent: #6ea8fe; --good: #5fd39a; --warn: #f2b84b; --bad: #f27d7d;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: inherit; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+  .bar { max-width: 980px; margin: 0 auto; padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+  h1 { font-size: 18px; margin: 0; white-space: nowrap; }
+  #status { color: var(--muted); font-size: 12px; flex: 1; min-width: 140px; }
+  button, select, input { font: inherit; color: var(--text); background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 7px 11px; }
+  button { cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: #0b1220; border-color: var(--accent); font-weight: 600; }
+  #searchForm { display: flex; gap: 6px; flex: 1 1 100%; }
+  #searchForm input { flex: 1; min-width: 0; }
+  nav { max-width: 980px; margin: 0 auto; padding: 0 14px 8px; display: flex; gap: 6px; overflow-x: auto; }
+  nav button { white-space: nowrap; border-radius: 999px; padding: 6px 13px; }
+  nav button.on { background: var(--accent); color: #0b1220; border-color: var(--accent); font-weight: 600; }
+  .badge { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 5px; border-radius: 999px; background: var(--good); color: #0b1220; font-size: 11px; font-weight: 700; text-align: center; }
+  main { max-width: 980px; margin: 0 auto; padding: 14px; }
+  h2 { font-size: 15px; margin: 20px 0 8px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  h2:first-child { margin-top: 4px; }
+  .tools { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; align-items: center; }
+  .tools button.on { border-color: var(--accent); color: var(--accent); }
+  .card { display: flex; gap: 12px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px; margin-bottom: 8px; }
+  .card.new { border-color: var(--good); }
+  .card img, .card .noimg { width: 46px; height: 66px; object-fit: cover; border-radius: 6px; background: var(--panel2); flex: none; }
+  .card .noimg { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 12px; font-weight: 700; }
+  .card .body { flex: 1; min-width: 0; }
+  .card .title { font-weight: 600; text-decoration: none; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card .title:hover { text-decoration: underline; }
+  .sub { color: var(--muted); font-size: 12px; }
+  .when { font-size: 13px; margin-top: 2px; }
+  .when .latest { color: var(--good); }
+  .cd { color: var(--warn); white-space: nowrap; }
+  .card .btns { display: flex; flex-direction: column; gap: 5px; flex: none; }
+  .card button { font-size: 12px; padding: 5px 9px; }
+  button.track.on { color: var(--good); border-color: var(--good); }
+  .msg { color: var(--muted); padding: 18px 4px; }
+  .msg.err { color: var(--bad); }
+  .note { background: var(--panel); border: 1px dashed var(--line); border-radius: 10px; padding: 12px 14px; color: var(--muted); margin-bottom: 10px; }
+  .note b { color: var(--text); }
+  #settings { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 10; }
+  #settings.open { display: flex; }
+  #settings .box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; width: 100%; max-width: 460px; }
+  #settings label { display: block; margin: 12px 0 4px; font-weight: 600; }
+  #settings input[type=text] { width: 100%; }
+  #settings .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+  #settings .chk { display: flex; gap: 8px; align-items: center; font-weight: 400; }
+  footer { max-width: 980px; margin: 0 auto; padding: 18px 14px 30px; color: var(--muted); font-size: 12px; }
+  @media (max-width: 520px) { .card { gap: 9px; } .card .title { white-space: normal; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1>Release Tracker</h1>
+    <span id="status">Starting…</span>
+    <button id="refreshBtn" type="button">Refresh</button>
+    <button id="settingsBtn" type="button">Settings</button>
+    <form id="searchForm">
+      <select id="searchKind" aria-label="What to search"></select>
+      <input id="searchInput" type="search" placeholder="Search a title to track…" aria-label="Search">
+      <button class="primary" type="submit">Search</button>
+    </form>
+  </div>
+  <nav id="tabs"></nav>
+</header>
+
+<main id="view"></main>
+
+<div id="settings">
+  <div class="box">
+    <strong>Settings</strong>
+    <label for="tmdbKey">TMDB API key (needed for movies only)</label>
+    <input id="tmdbKey" type="text" autocomplete="off" spellcheck="false" placeholder="Paste your free TMDB key here">
+    <div class="sub">Free from themoviedb.org → Settings → API. Either the short "API Key" or the long "Read Access Token" works. It is saved only in this browser.</div>
+    <label class="chk"><input id="showAdult" type="checkbox"> Show the 18+ anime section</label>
+    <div class="row">
+      <button id="settingsCancel" type="button">Cancel</button>
+      <button id="settingsSave" class="primary" type="button">Save</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Anime and manga data from AniList. Movie data from TMDB — this product uses the TMDB API but is not endorsed or certified by TMDB.
+  Your tracked list is saved in this browser on this device only.
+</footer>
+
+<script>
+'use strict';
+
+/* ---------- constants ---------- */
+var AL_URL = 'https://graphql.anilist.co';
+var TM_URL = 'https://api.themoviedb.org/3';
+var TM_IMG = 'https://image.tmdb.org/t/p/w154';
+var REFRESH_MS = 5 * 60 * 1000;
+var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var COUNTRY = { JP: 'Japanese', CN: 'Chinese', KR: 'Korean', TW: 'Taiwanese' };
+var LANG = { en: 'English', ta: 'Tamil' };
+var MEDIA_FIELDS = 'id type format status isAdult countryOfOrigin episodes chapters siteUrl ' +
+  'title{romaji english} coverImage{medium} startDate{year month day} nextAiringEpisode{airingAt episode}';
+
+/* ---------- storage (falls back to memory if the browser blocks it) ---------- */
+var store = {
+  get: function (k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ignore */ } }
+};
+var settings = Object.assign({ tmdbKey: '', showAdult: false }, store.get('rt.settings', {}));
+var list = store.get('rt.list', []);
+if (!Array.isArray(list)) list = [];
+var ui = Object.assign({ tab: 'home', range: 1, mangaCountry: 'JP', movieLang: 'ta' }, store.get('rt.ui', {}));
+if (ui.tab === 'search') ui.tab = 'home';
+
+var cache = new Map();      // key -> { t, data }
+var shown = new Map();      // id -> entry currently on screen (so "Track" can find it)
+var renderToken = 0;
+var lastSearch = null;
+
+/* ---------- small helpers ---------- */
+function $(id) { return document.getElementById(id); }
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function pad(n) { return String(n).padStart(2, '0'); }
+function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function fuzzyInt(d) { return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
+function addDays(d, n) { var x = new Date(d); x.setDate(x.getDate() + n); return x; }
+function startOfDay(t) { var d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); }
+function fmtDate(d) { return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }); }
+function fmtTime(d) { return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }); }
+function rel(at) {
+  var diff = at - Date.now();
+  var m = Math.round(Math.abs(diff) / 60000);
+  if (m < 1) return 'right now';
+  var s;
+  if (m < 60) s = m + 'm';
+  else if (m < 1440) s = Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+  else s = Math.floor(m / 1440) + 'd ' + Math.floor((m % 1440) / 60) + 'h';
+  return diff >= 0 ? 'in ' + s : s + ' ago';
+}
+function relDay(at) {
+  var n = Math.round((startOfDay(at) - startOfDay(Date.now())) / 86400000);
+  if (n === 0) return 'today';
+  if (n === 1) return 'tomorrow';
+  if (n === -1) return 'yesterday';
+  return n > 0 ? 'in ' + n + ' days' : (-n) + ' days ago';
+}
+function fuzzyInfo(sd) {
+  if (!sd || !sd.year) return null;
+  if (!sd.month) return { at: null, text: String(sd.year) };
+  if (!sd.day) return { at: null, text: MONTHS[sd.month - 1] + ' ' + sd.year };
+  var dt = new Date(sd.year, sd.month - 1, sd.day);
+  return { at: dt.getTime(), text: fmtDate(dt) };
+}
+
+/* ---------- data sources ---------- */
+async function al(query, variables) {
+  var r;
+  try {
+    r = await fetch(AL_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ query: query, variables: variables || {} })
+    });
+  } catch (e) { throw new Error('Could not reach AniList. Check your internet connection.'); }
+  if (r.status === 429) throw new Error('AniList is limiting requests right now. It will try again on the next refresh.');
+  var j;
+  try { j = await r.json(); } catch (e) { throw new Error('AniList sent an unreadable reply (code ' + r.status + ').'); }
+  if (!r.ok || (j && j.errors)) {
+    var msg = j && j.errors && j.errors[0] && j.errors[0].message;
+    throw new Error('AniList error: ' + (msg || r.status));
+  }
+  return j.data;
+}
+async function alCached(key, query, variables) {
+  var c = cache.get(key);
+  if (c && Date.now() - c.t < REFRESH_MS) return c.data;
+  var data = await al(query, variables);
+  cache.set(key, { t: Date.now(), data: data });
+  return data;
+}
+async function tm(path, params) {
+  var key = (settings.tmdbKey || '').trim();
+  if (!key) throw new Error('NO_KEY');
+  var u = new URL(TM_URL + path);
+  Object.keys(params || {}).forEach(function (k) {
+    if (params[k] !== '' && params[k] != null) u.searchParams.set(k, params[k]);
+  });
+  var headers = { 'Accept': 'application/json' };
+  if (key.indexOf('eyJ') === 0) headers.Authorization = 'Bearer ' + key;
+  else u.searchParams.set('api_key', key);
+  var r;
+  try { r = await fetch(u.toString(), { headers: headers }); }
+  catch (e) { throw new Error('Could not reach TMDB. Check your internet connection.'); }
+  if (r.status === 401) throw new Error('TMDB did not accept the API key. Check it in Settings.');
+  if (!r.ok) throw new Error('TMDB error (code ' + r.status + ').');
+  return r.json();
+}
+async function tmCached(key, path, params) {
+  var c = cache.get(key);
+  if (c && Date.now() - c.t < REFRESH_MS) return c.data;
+  var data = await tm(path, params);
+  cache.set(key, { t: Date.now(), data: data });
+  return data;
+}
+
+/* ---------- turning raw data into one common "entry" shape ---------- */
+function alState(m) {
+  var next = null, latest = null;
+  var manga = m.type === 'MANGA';
+  var n = m.nextAiringEpisode;
+  if (n) {
+    next = { at: n.airingAt * 1000, label: 'Episode ' + n.episode, dateOnly: false };
+    if (n.episode > 1) latest = { token: 'ep' + (n.episode - 1), label: 'Episode ' + (n.episode - 1) + ' is out' };
+  } else if (m.status === 'NOT_YET_RELEASED') {
+    var sd = fuzzyInfo(m.startDate);
+    next = { at: sd ? sd.at : null, label: manga ? 'Starts' : 'Premieres', dateOnly: true, text: sd ? sd.text : 'date to be announced' };
+  }
+  if (!latest) {
+    if (m.status === 'FINISHED') {
+      latest = { token: 'fin', label: manga
+        ? 'Completed' + (m.chapters ? ' · ' + m.chapters + ' chapters' : '')
+        : 'Finished' + (m.episodes ? ' · ' + m.episodes + ' episodes' : '') };
+    } else if (m.status === 'RELEASING' && !n) {
+      latest = { token: 'rel', label: 'Now releasing' };
+    } else if (m.status === 'CANCELLED') {
+      latest = { token: 'can', label: 'Cancelled' };
+    } else if (m.status === 'HIATUS') {
+      latest = { token: 'hia', label: 'On hiatus' };
+    }
+  }
+  return { next: next, latest: latest };
+}
+function alEntry(m) {
+  var manga = m.type === 'MANGA';
+  var kind = manga ? 'manga' : (m.isAdult ? 'adult' : 'anime');
+  var parts = [];
+  if (m.format) parts.push(String(m.format).replace(/_/g, ' '));
+  if (manga && m.countryOfOrigin) parts.push(COUNTRY[m.countryOfOrigin] || m.countryOfOrigin);
+  if (m.isAdult) parts.push('18+');
+  var t = m.title || {};
+  return {
+    id: 'al-' + m.id, src: 'al', kind: kind,
+    title: t.english || t.romaji || 'Untitled',
+    sub: parts.join(' · '),
+    img: m.isAdult ? null : (m.coverImage && m.coverImage.medium) || null,
+    url: m.siteUrl || ('https://anilist.co/' + (manga ? 'manga' : 'anime') + '/' + m.id),
+    state: alState(m)
+  };
+}
+function tmState(rd) {
+  if (!rd) return { next: { at: null, label: 'Release', dateOnly: true, text: 'date to be announced' }, latest: null };
+  var p = String(rd).split('-').map(Number);
+  var at = new Date(p[0], p[1] - 1, p[2]).getTime();
+  if (isNaN(at)) return { next: null, latest: null };
+  if (at <= Date.now()) return { next: null, latest: { token: 'out', label: 'Released ' + fmtDate(new Date(at)) } };
+  return { next: { at: at, label: 'Release', dateOnly: true }, latest: null };
+}
+function tmEntry(mv) {
+  var lang = LANG[mv.original_language] || (mv.original_language || '').toUpperCase();
+  return {
+    id: 'tm-' + mv.id, src: 'tm', kind: 'movie',
+    title: mv.title || mv.original_title || 'Untitled',
+    sub: ['Movie', lang].filter(Boolean).join(' · '),
+    img: mv.poster_path ? TM_IMG + mv.poster_path : null,
+    url: 'https://www.themoviedb.org/movie/' + mv.id,
+    rd: mv.release_date || '',
+    state: tmState(mv.release_date)
+  };
+}
+function stateOf(e) { return e.src === 'tm' ? tmState(e.rd) : (e.state || { next: null, latest: null }); }
+
+/* ---------- tracked list ---------- */
+function findItem(id) { for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]; return null; }
+function saveList() { store.set('rt.list', list); }
+function isNew(item) {
+  var st = stateOf(item);
+  if (!st.latest) return false;
+  if (st.latest.token === item.ack) return false;
+  // An airing show that briefly has no next episode listed is not a new release.
+  if (st.latest.token === 'rel' && item.ack && String(item.ack).indexOf('ep') === 0) return false;
+  return true;
+}
+function newCount() { return list.filter(isNew).length; }
+function track(entry) {
+  if (findItem(entry.id)) return;
+  var st = stateOf(entry);
+  var item = Object.assign({}, entry, { ack: st.latest ? st.latest.token : null, addedAt: Date.now() });
+  list.push(item);
+  saveList();
+}
+function untrack(id) { list = list.filter(function (x) { return x.id !== id; }); saveList(); }
+
+async function refreshList() {
+  var errors = [];
+  var alIds = list.filter(function (x) { return x.src === 'al'; }).map(function (x) { return Number(x.id.slice(3)); });
+  for (var i = 0; i < alIds.length; i += 50) {
+    var chunk = alIds.slice(i, i + 50);
+    try {
+      var d = await al('query($ids:[Int]){Page(perPage:50){media(id_in:$ids){' + MEDIA_FIELDS + '}}}', { ids: chunk });
+      (d.Page.media || []).forEach(function (m) {
+        var item = findItem('al-' + m.id);
+        if (!item) return;
+        var fresh = alEntry(m);
+        item.state = fresh.state; item.sub = fresh.sub; item.title = fresh.title; item.img = fresh.img;
+      });
+    } catch (e) { errors.push(e.message); break; }
+  }
+  if ((settings.tmdbKey || '').trim()) {
+    var movies = list.filter(function (x) { return x.src === 'tm'; });
+    for (var k = 0; k < movies.length; k++) {
+      try {
+        var mv = await tm('/movie/' + movies[k].id.slice(3), {});
+        movies[k].rd = mv.release_date || '';
+        if (mv.title) movies[k].title = mv.title;
+      } catch (e) { errors.push(e.message); break; }
+    }
+  }
+  saveList();
+  return errors;
+}
+
+/* ---------- rendering ---------- */
+function nextHtml(n) {
+  if (!n) return '';
+  if (n.at == null) return esc(n.label + ' · ' + (n.text || 'date to be announced'));
+  var d = new Date(n.at);
+  if (n.dateOnly) {
+    return esc(n.label + ' · ' + fmtDate(d)) + ' · <span class="cd" data-at="' + n.at + '" data-day="1">' + esc(relDay(n.at)) + '</span>';
+  }
+  return esc(n.label + ' · ' + fmtDate(d) + ', ' + fmtTime(d)) + ' · <span class="cd" data-at="' + n.at + '">' + esc(rel(n.at)) + '</span>';
+}
+function whenHtml(e) {
+  var st = stateOf(e), parts = [];
+  if (st.latest) parts.push('<span class="latest">' + esc(st.latest.label) + '</span>');
+  var nx = nextHtml(st.next);
+  if (nx) parts.push(nx);
+  return parts.join('<br>');
+}
+function card(e, mode) {
+  shown.set(e.id, e);
+  var tracked = !!findItem(e.id);
+  var fresh = mode === 'list' && isNew(e);
+  var img = e.img
+    ? '<img src="' + esc(e.img) + '" alt="" loading="lazy" referrerpolicy="no-referrer">'
+    : '<div class="noimg">' + (e.kind === 'adult' ? '18+' : '') + '</div>';
+  var btns;
+  if (mode === 'list') {
+    btns = (fresh ? '<button type="button" data-act="seen">Mark seen</button>' : '') +
+           '<button type="button" data-act="remove">Remove</button>';
+  } else {
+    btns = '<button type="button" class="track' + (tracked ? ' on' : '') + '" data-act="toggle">' + (tracked ? 'Tracking ✓' : '+ Track') + '</button>';
+  }
+  return '<article class="card' + (fresh ? ' new' : '') + '" data-id="' + esc(e.id) + '">' + img +
+    '<div class="body"><a class="title" href="' + esc(e.url) + '" target="_blank" rel="noopener">' + esc(e.title) + '</a>' +
+    '<div class="sub">' + esc(e.sub) + '</div><div class="when">' + whenHtml(e) + '</div></div>' +
+    '<div class="btns">' + btns + '</div></article>';
+}
+function section(title, entries, mode, emptyText) {
+  var h = '<h2>' + esc(title) + '</h2>';
+  if (!entries.length) return h + '<p class="msg">' + esc(emptyText || 'Nothing to show.') + '</p>';
+  return h + entries.map(function (e) { return card(e, mode); }).join('');
+}
+function byNext(a, b) {
+  var x = stateOf(a).next, y = stateOf(b).next;
+  var ax = x && x.at != null ? x.at : Infinity, ay = y && y.at != null ? y.at : Infinity;
+  return ax - ay;
+}
+
+function tabsDef() {
+  var t = [['home', 'My releases'], ['anime', 'Anime']];
+  if (settings.showAdult) t.push(['adult', '18+ anime']);
+  t.push(['manga', 'Manga / Manhua'], ['movies', 'Movies']);
+  return t;
+}
+function renderTabs() {
+  var n = newCount();
+  $('tabs').innerHTML = tabsDef().map(function (t) {
+    var badge = t[0] === 'home' && n ? '<span class="badge">' + n + '</span>' : '';
+    return '<button type="button" data-tab="' + t[0] + '" class="' + (ui.tab === t[0] ? 'on' : '') + '">' + esc(t[1]) + badge + '</button>';
+  }).join('');
+  document.title = (n ? '(' + n + ') ' : '') + 'Release Tracker';
+  var kinds = [['anime', 'Anime']];
+  if (settings.showAdult) kinds.push(['adult', '18+ anime']);
+  kinds.push(['manga', 'Manga'], ['movie', 'Movie']);
+  var sel = $('searchKind'), cur = sel.value;
+  sel.innerHTML = kinds.map(function (k) { return '<option value="' + k[0] + '">' + k[1] + '</option>'; }).join('');
+  if (kinds.some(function (k) { return k[0] === cur; })) sel.value = cur;
+}
+function setStatus(text) { $('status').textContent = text; }
+function keyNote() {
+  return '<div class="note"><b>Movies need a free TMDB key.</b> Create a free account at themoviedb.org, open Settings → API, ' +
+    'copy the key, then paste it under <b>Settings</b> here. Anime and manga work without it.</div>';
+}
+
+function renderHome() {
+  if (!list.length) {
+    return '<div class="note"><b>Nothing tracked yet.</b> Open a tab above or use the search box, then press <b>+ Track</b> ' +
+      'on anything you follow. New releases for those titles will show up here.</div>';
+  }
+  var fresh = list.filter(isNew);
+  var rest = list.filter(function (x) { return !isNew(x); });
+  var coming = rest.filter(function (x) { return !!stateOf(x).next; }).sort(byNext);
+  var other = rest.filter(function (x) { return !stateOf(x).next; });
+  var html = '';
+  if (fresh.length) {
+    html += '<div class="tools"><button type="button" data-act="seenall">Mark all as seen</button></div>' +
+      section('New since you last checked', fresh, 'list');
+  }
+  html += section('Coming up', coming, 'list', 'No upcoming dates for your tracked titles.');
+  if (other.length) html += section('Released / no date yet', other, 'list');
+  return html;
+}
+
+async function renderAnime() {
+  var days = [1, 3, 7];
+  var range = days.indexOf(ui.range) >= 0 ? ui.range : 1;
+  var from = Math.floor(Date.now() / 1000) - 6 * 3600;
+  var to = Math.floor(Date.now() / 1000) + range * 86400;
+  var rows = [];
+  for (var page = 1; page <= 10; page++) {
+    var d = await alCached('sched:' + range + ':' + page,
+      'query($from:Int,$to:Int,$page:Int){Page(page:$page,perPage:50){pageInfo{hasNextPage} ' +
+      'airingSchedules(airingAt_greater:$from,airingAt_lesser:$to,sort:TIME){episode airingAt media{' + MEDIA_FIELDS + '}}}}',
+      { from: from, to: to, page: page });
+    rows = rows.concat(d.Page.airingSchedules || []);
+    if (!d.Page.pageInfo || !d.Page.pageInfo.hasNextPage) break;
+  }
+  rows = rows.filter(function (r) { return r.media && !r.media.isAdult; });
+  var html = '<div class="tools">' + days.map(function (n) {
+    return '<button type="button" data-range="' + n + '" class="' + (n === range ? 'on' : '') + '">' + (n === 1 ? 'Next 24 hours' : 'Next ' + n + ' days') + '</button>';
+  }).join('') + '<span class="sub">Times are in your local time zone.</span></div>';
+  if (!rows.length) return html + '<p class="msg">No episodes scheduled in this window.</p>';
+  var lastDay = '';
+  rows.forEach(function (r) {
+    var at = r.airingAt * 1000, day = fmtDate(new Date(at));
+    if (day !== lastDay) { html += '<h2>' + esc(day) + '</h2>'; lastDay = day; }
+    var e = alEntry(r.media);
+    shown.set(e.id, e);
+    var tracked = !!findItem(e.id);
+    html += '<article class="card" data-id="' + esc(e.id) + '">' +
+      (e.img ? '<img src="' + esc(e.img) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '<div class="noimg"></div>') +
+      '<div class="body"><a class="title" href="' + esc(e.url) + '" target="_blank" rel="noopener">' + esc(e.title) + '</a>' +
+      '<div class="sub">' + esc(e.sub) + '</div><div class="when">' + esc('Episode ' + r.episode + ' · ' + fmtTime(new Date(at))) +
+      ' · <span class="cd" data-at="' + at + '">' + esc(rel(at)) + '</span></div></div>' +
+      '<div class="btns"><button type="button" class="track' + (tracked ? ' on' : '') + '" data-act="toggle">' + (tracked ? 'Tracking ✓' : '+ Track') + '</button></div></article>';
+  });
+  return html;
+}
+
+async function alBrowse(key, args, vars, types) {
+  var d = await alCached(key, 'query(' + types + '){Page(perPage:30){media(' + args + '){' + MEDIA_FIELDS + '}}}', vars);
+  return (d.Page.media || []).map(alEntry);
+}
+
+async function renderAdult() {
+  var today = new Date();
+  var recent = await alBrowse('adult:recent',
+    'type:ANIME,isAdult:true,sort:START_DATE_DESC,startDate_lesser:$to,startDate_greater:$from',
+    { to: fuzzyInt(addDays(today, 1)), from: fuzzyInt(addDays(today, -180)) }, '$to:FuzzyDateInt,$from:FuzzyDateInt');
+  var upcoming = await alBrowse('adult:upcoming',
+    'type:ANIME,isAdult:true,status:NOT_YET_RELEASED,sort:START_DATE,startDate_greater:$from',
+    { from: fuzzyInt(addDays(today, -1)) }, '$from:FuzzyDateInt');
+  return '<div class="note">Release dates for 18+ titles are often added late or left blank on AniList, so this section has gaps.</div>' +
+    section('Upcoming', upcoming, 'browse', 'No upcoming titles with a date listed.') +
+    section('Released in the last 6 months', recent, 'browse', 'Nothing listed.');
+}
+
+async function renderManga() {
+  var c = ui.mangaCountry === 'CN' ? 'CN' : 'JP';
+  var today = new Date();
+  var types = '$c:CountryCode';
+  var trending = await alBrowse('manga:trend:' + c,
+    'type:MANGA,isAdult:false,countryOfOrigin:$c,status:RELEASING,sort:TRENDING_DESC', { c: c }, types);
+  var fresh = await alBrowse('manga:new:' + c,
+    'type:MANGA,isAdult:false,countryOfOrigin:$c,sort:START_DATE_DESC,startDate_lesser:$to,startDate_greater:$from',
+    { c: c, to: fuzzyInt(addDays(today, 1)), from: fuzzyInt(addDays(today, -90)) }, types + ',$to:FuzzyDateInt,$from:FuzzyDateInt');
+  var upcoming = await alBrowse('manga:up:' + c,
+    'type:MANGA,isAdult:false,countryOfOrigin:$c,status:NOT_YET_RELEASED,sort:START_DATE,startDate_greater:$from',
+    { c: c, from: fuzzyInt(addDays(today, -1)) }, types + ',$from:FuzzyDateInt');
+  return '<div class="tools">' +
+    '<button type="button" data-country="JP" class="' + (c === 'JP' ? 'on' : '') + '">Japanese (manga)</button>' +
+    '<button type="button" data-country="CN" class="' + (c === 'CN' ? 'on' : '') + '">Chinese (manhua)</button></div>' +
+    '<div class="note">This page tracks <b>series</b> (new, ongoing, completed). Chapter-by-chapter alerts are not possible from a web page; ' +
+    'that part is planned for the desktop app.</div>' +
+    section('Trending and ongoing', trending, 'browse') +
+    section('New series (last 90 days)', fresh, 'browse', 'Nothing listed.') +
+    section('Upcoming series', upcoming, 'browse', 'No upcoming series with a date listed.');
+}
+
+async function movieWindow(lang, from, to, pages) {
+  var out = [];
+  for (var p = 1; p <= pages; p++) {
+    var d = await tmCached('mv:' + lang + ':' + from + ':' + to + ':' + p, '/discover/movie', {
+      with_original_language: lang, sort_by: 'popularity.desc', include_adult: 'false',
+      'primary_release_date.gte': from, 'primary_release_date.lte': to, page: p
+    });
+    out = out.concat(d.results || []);
+    if (!d.total_pages || p >= d.total_pages) break;
+  }
+  return out.filter(function (m) { return !!m.release_date; }).map(tmEntry);
+}
+async function renderMovies() {
+  var lang = ui.movieLang === 'en' ? 'en' : 'ta';
+  var tools = '<div class="tools">' +
+    '<button type="button" data-lang="ta" class="' + (lang === 'ta' ? 'on' : '') + '">Tamil</button>' +
+    '<button type="button" data-lang="en" class="' + (lang === 'en' ? 'on' : '') + '">English</button>' +
+    '<span class="sub">Dates are each film\'s first release date; local cinema and streaming dates can differ.</span></div>';
+  if (!(settings.tmdbKey || '').trim()) return tools + keyNote();
+  var today = new Date();
+  var out = await movieWindow(lang, ymd(addDays(today, -45)), ymd(today), 2);
+  var coming = await movieWindow(lang, ymd(addDays(today, 1)), ymd(addDays(today, 120)), 2);
+  out.sort(function (a, b) { return a.rd < b.rd ? 1 : a.rd > b.rd ? -1 : 0; });
+  coming.sort(function (a, b) { return a.rd < b.rd ? -1 : a.rd > b.rd ? 1 : 0; });
+  return tools + section('Coming up (next 4 months)', coming, 'browse', 'No upcoming films listed.') +
+    section('Out now (last 45 days)', out, 'browse', 'Nothing listed.');
+}
+
+async function renderSearch() {
+  var q = lastSearch.q, kind = lastSearch.kind, results;
+  if (kind === 'movie') {
+    if (!(settings.tmdbKey || '').trim()) return keyNote();
+    var d = await tm('/search/movie', { query: q, include_adult: 'false', page: 1 });
+    results = (d.results || []).map(tmEntry);
+  } else {
+    var d2 = await al('query($q:String,$type:MediaType,$adult:Boolean){Page(perPage:25){media(search:$q,type:$type,isAdult:$adult,sort:SEARCH_MATCH){' + MEDIA_FIELDS + '}}}',
+      { q: q, type: kind === 'manga' ? 'MANGA' : 'ANIME', adult: kind === 'adult' });
+    results = (d2.Page.media || []).map(alEntry);
+  }
+  return section('Search results for "' + q + '"', results, 'browse', 'No matches. Try a different spelling or the original title.');
+}
+
+async function render() {
+  var token = ++renderToken;
+  var view = $('view');
+  renderTabs();
+  shown.clear();
+  if (ui.tab === 'home') { view.innerHTML = renderHome(); return; }
+  if (!view.dataset.tab || view.dataset.tab !== ui.tab + ':' + ui.range + ui.mangaCountry + ui.movieLang) {
+    view.innerHTML = '<p class="msg">Loading…</p>';
+  }
+  var html;
+  try {
+    if (ui.tab === 'anime') html = await renderAnime();
+    else if (ui.tab === 'adult' && settings.showAdult) html = await renderAdult();
+    else if (ui.tab === 'manga') html = await renderManga();
+    else if (ui.tab === 'movies') html = await renderMovies();
+    else if (ui.tab === 'search' && lastSearch) html = await renderSearch();
+    else { ui.tab = 'home'; renderTabs(); html = renderHome(); }
+  } catch (e) {
+    html = '<p class="msg err">' + esc(e.message === 'NO_KEY' ? 'Add your TMDB key in Settings to load movies.' : e.message) + '</p>';
+  }
+  if (token !== renderToken) return;   // the user moved to another tab meanwhile
+  view.innerHTML = html;
+  view.dataset.tab = ui.tab + ':' + ui.range + ui.mangaCountry + ui.movieLang;
+}
+
+async function refreshAll(manual) {
+  if (manual) cache.clear();
+  setStatus('Updating…');
+  var errors = await refreshList();
+  await render();
+  var t = fmtTime(new Date());
+  setStatus(errors.length ? 'Problem at ' + t + ': ' + errors[0] : 'Updated ' + t + ' · refreshes every 5 minutes while open');
+}
+
+function tickCountdowns() {
+  var els = document.querySelectorAll('.cd');
+  for (var i = 0; i < els.length; i++) {
+    var at = Number(els[i].getAttribute('data-at'));
+    if (!at) continue;
+    els[i].textContent = els[i].getAttribute('data-day') ? relDay(at) : rel(at);
+  }
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', function (ev) {
+  var t = ev.target;
+  if (!(t instanceof Element)) return;
+  var btn = t.closest('button');
+  if (!btn) return;
+
+  if (btn.dataset.tab) { ui.tab = btn.dataset.tab; store.set('rt.ui', ui); render(); return; }
+  if (btn.dataset.range) { ui.range = Number(btn.dataset.range); store.set('rt.ui', ui); render(); return; }
+  if (btn.dataset.country) { ui.mangaCountry = btn.dataset.country; store.set('rt.ui', ui); render(); return; }
+  if (btn.dataset.lang) { ui.movieLang = btn.dataset.lang; store.set('rt.ui', ui); render(); return; }
+
+  var act = btn.dataset.act;
+  if (!act) return;
+  if (act === 'seenall') {
+    list.forEach(function (x) { var st = stateOf(x); if (st.latest) x.ack = st.latest.token; });
+    saveList(); render(); return;
+  }
+  var cardEl = btn.closest('.card');
+  var id = cardEl && cardEl.getAttribute('data-id');
+  if (!id) return;
+  if (act === 'toggle') {
+    if (findItem(id)) untrack(id);
+    else if (shown.get(id)) track(shown.get(id));
+    var on = !!findItem(id);
+    var all = document.querySelectorAll('.card');
+    for (var i = 0; i < all.length; i++) {
+      if (all[i].getAttribute('data-id') !== id) continue;
+      var b = all[i].querySelector('button.track');
+      if (b) { b.classList.toggle('on', on); b.textContent = on ? 'Tracking ✓' : '+ Track'; }
+    }
+    renderTabs();
+  } else if (act === 'seen') {
+    var item = findItem(id);
+    if (item) { var st = stateOf(item); item.ack = st.latest ? st.latest.token : item.ack; saveList(); }
+    render();
+  } else if (act === 'remove') {
+    untrack(id); render();
+  }
+});
+
+$('searchForm').addEventListener('submit', function (ev) {
+  ev.preventDefault();
+  var q = $('searchInput').value.trim();
+  if (!q) return;
+  lastSearch = { q: q, kind: $('searchKind').value };
+  ui.tab = 'search';
+  render();
+});
+$('refreshBtn').addEventListener('click', function () { refreshAll(true); });
+$('settingsBtn').addEventListener('click', function () {
+  $('tmdbKey').value = settings.tmdbKey || '';
+  $('showAdult').checked = !!settings.showAdult;
+  $('settings').classList.add('open');
+});
+$('settingsCancel').addEventListener('click', function () { $('settings').classList.remove('open'); });
+$('settingsSave').addEventListener('click', function () {
+  settings.tmdbKey = $('tmdbKey').value.trim();
+  settings.showAdult = $('showAdult').checked;
+  store.set('rt.settings', settings);
+  $('settings').classList.remove('open');
+  if (!settings.showAdult && ui.tab === 'adult') ui.tab = 'home';
+  refreshAll(true);
+});
+
+/* ---------- start ---------- */
+renderTabs();
+refreshAll(false);
+setInterval(function () { cache.clear(); refreshAll(false); }, REFRESH_MS);
+setInterval(tickCountdowns, 30000);
+</script>
+</body>
+</html>
