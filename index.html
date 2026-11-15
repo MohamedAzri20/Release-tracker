@@ -181,8 +181,8 @@
     .grid .extra-in { display: block; overflow: hidden; min-height: 0; }
     .grid .card:hover .extra, .grid .card:focus-within .extra { grid-template-rows: 1fr; opacity: 1; }
     .grid .btns { padding-top: 10px; }
-    .grid .card.tracked::after {
-      content: "Tracking"; position: absolute; top: 9px; left: 9px; padding: 3px 10px; border-radius: 999px;
+    .grid .card.inlib::after {
+      content: "On my list"; position: absolute; top: 9px; left: 9px; padding: 3px 10px; border-radius: 999px;
       font-size: 12px; font-weight: 700; color: #05241f; background: rgba(89, 214, 196, .92);
       box-shadow: 0 6px 16px -6px rgba(0, 0, 0, .7);
     }
@@ -197,6 +197,144 @@
     .hero .poster { width: 78px; height: 114px; }
   }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+
+  /* ---------- additions: library, detail panel, import ---------- */
+  .card button.title, .hero button.title {
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    width: 100%; margin: 0; padding: 0; border: 0; border-radius: 0; background: none; color: inherit;
+    font: inherit; font-weight: 600; text-align: left; cursor: pointer; transition: none;
+  }
+  .card button.title:hover, .hero button.title:hover { background: none; text-decoration: underline; }
+  .card button.title:active, .hero button.title:active { transform: none; }
+  .hero button.hero-title { font-size: 20px; font-weight: 700; line-height: 1.25; margin: 2px 0 8px; -webkit-line-clamp: 3; }
+  .rows .card, .grid .card { cursor: pointer; }
+  .note-line { color: var(--mute); font-size: 12.5px; margin-top: 2px; }
+
+  .pbar { height: 5px; border-radius: 99px; background: rgba(255, 255, 255, .13); overflow: hidden; margin-top: 7px; }
+  .pbar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--teal), #a5f3e8); }
+  .pbar.big { height: 8px; margin-top: 4px; }
+
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 11.5px; font-weight: 700; white-space: nowrap; background: rgba(255, 255, 255, .14); color: var(--ink); }
+  .pill.s-current { background: rgba(89, 214, 196, .92); color: #05241f; }
+  .pill.s-planning { background: rgba(124, 156, 255, .9); color: #0b1440; }
+  .pill.s-completed { background: rgba(255, 210, 63, .92); color: #2a2000; }
+  .pill.s-paused { background: rgba(255, 176, 92, .92); color: #2a1500; }
+  .pill.s-dropped { background: rgba(255, 143, 143, .9); color: #2a0606; }
+  .grid .card.lib .pill { position: absolute; top: 9px; left: 9px; z-index: 2; box-shadow: 0 6px 16px -6px rgba(0, 0, 0, .7); }
+  .grid .card.lib .info .sub { margin-top: 2px; }
+
+  .count { color: var(--mute); font-size: 13px; margin: 2px 0 10px; }
+  .lib-tools input[type=search] { flex: 1 1 220px; min-width: 0; }
+  .lib-tools select { flex: none; }
+  .more { display: flex; justify-content: center; margin: 18px 0 6px; }
+  .empty-cta { margin-top: 12px; }
+  .filebtn { display: inline-block; cursor: pointer; font-weight: 600; padding: 8px 14px; border-radius: 999px; background: var(--glass-2); border: 1px solid var(--edge); }
+  .filebtn:hover { background: rgba(255, 255, 255, .18); border-color: var(--edge-hi); }
+  .filebtn:focus-within { outline: 2px solid var(--marquee); outline-offset: 2px; }
+  h2.page { font: 400 22px/1.2 var(--display); color: var(--marquee); margin: 4px 0 12px; }
+  button[disabled] { opacity: .5; cursor: not-allowed; }
+
+  #toast {
+    position: fixed; left: 50%; bottom: 22px; z-index: 40; transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+    padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: 14px; color: var(--ink);
+    background: rgba(34, 28, 66, .9); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid var(--edge-hi);
+    transition: opacity .2s ease, transform .2s ease; max-width: calc(100% - 32px); text-align: center;
+  }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* detail panel */
+  body.noscroll { overflow: hidden; }
+  .sheet { position: fixed; inset: 0; z-index: 20; display: none; }
+  .sheet.open { display: block; }
+  .sheet-back { position: absolute; inset: 0; background: rgba(8, 6, 20, .6); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); }
+  .sheet-panel {
+    position: absolute; top: 0; right: 0; bottom: 0; width: min(580px, 100%); overflow-y: auto; overscroll-behavior: contain;
+    background: rgba(28, 23, 56, .9); -webkit-backdrop-filter: blur(28px) saturate(160%); backdrop-filter: blur(28px) saturate(160%);
+    border-left: 1px solid var(--edge-hi); box-shadow: -30px 0 80px -30px rgba(0, 0, 0, .9);
+  }
+  .sheet-top { position: sticky; top: 0; height: 0; z-index: 3; }
+  .sheet-x {
+    position: absolute; top: 10px; right: 10px;
+    width: 40px; height: 40px; padding: 0; border-radius: 999px; font-size: 22px; line-height: 1; background: rgba(18, 15, 36, .65);
+  }
+  .d-hero { position: relative; overflow: hidden; padding: 26px 18px 18px; }
+  .d-bg { position: absolute; left: -25%; top: -25%; width: 150%; height: 150%; object-fit: cover; filter: blur(42px) saturate(1.5); opacity: .5; pointer-events: none; }
+  .d-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(28, 23, 56, .15), rgba(28, 23, 56, .96)); pointer-events: none; }
+  .d-top { position: relative; z-index: 1; display: flex; gap: 16px; align-items: flex-end; }
+  .d-top .poster { width: 116px; height: 166px; border-radius: 14px; flex: none; border: 1px solid var(--edge-hi); box-shadow: 0 18px 36px -14px rgba(0, 0, 0, .85); }
+  .d-head { min-width: 0; padding-right: 30px; }
+  .d-head h2 { font: 700 21px/1.25 var(--body); margin: 0; }
+  .d-head .alt { color: var(--mute); font-size: 13.5px; margin-top: 3px; }
+  .d-meta { color: var(--mute); font-size: 13.5px; margin-top: 8px; }
+  .d-head .when { margin-top: 6px; }
+  .d-body { padding: 2px 18px 30px; }
+  .d-sec { margin-top: 20px; }
+  .d-sec h3 { font: 600 13.5px var(--body); color: var(--mute); margin: 0 0 8px; }
+  .d-prog { padding: 14px; border-radius: 18px; background: var(--glass); border: 1px solid var(--edge); }
+  .d-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .d-row label { font-weight: 600; }
+  .stepper { display: flex; align-items: center; gap: 8px; margin: 12px 0 6px; flex-wrap: wrap; }
+  .stepper button { width: 46px; height: 46px; padding: 0; font-size: 24px; line-height: 1; border-radius: 14px; }
+  .stepper input { width: 84px; text-align: center; font-size: 19px; font-weight: 700; padding: 10px 6px; }
+  .stepper .of { color: var(--mute); }
+  button.wide { width: 100%; padding: 12px; font-size: 15px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: inline-block; padding: 4px 11px; border-radius: 999px; font-size: 13px; background: var(--glass-2); border: 1px solid var(--edge); text-decoration: none; }
+  a.chip:hover { border-color: var(--edge-hi); background: rgba(255, 255, 255, .17); }
+  .desc { white-space: pre-line; color: #ddd6f5; font-size: 14.5px; line-height: 1.62; max-width: 65ch; margin: 0; }
+  button.rel {
+    display: flex; gap: 11px; align-items: center; width: 100%; padding: 8px 10px 8px 8px; margin-bottom: 7px;
+    text-align: left; font-weight: 400; background: var(--glass); border: 1px solid var(--edge); border-left: 3px solid var(--k); border-radius: 13px;
+  }
+  button.rel .poster { width: 40px; height: 57px; border-radius: 7px; flex: none; }
+  button.rel .rel-t { flex: 1; min-width: 0; }
+  button.rel b { display: block; font-weight: 600; }
+  .d-foot { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--edge); }
+  .d-foot a { color: var(--mute); font-size: 14px; }
+  button.danger { border-color: rgba(255, 143, 143, .55); color: #ffc9c9; }
+  button.danger.confirm { background: rgba(255, 107, 107, .25); }
+
+  /* import */
+  .irow { display: flex; gap: 12px; align-items: flex-start; padding: 12px; margin-bottom: 8px; border-radius: 16px; background: var(--glass); border: 1px solid var(--edge); }
+  .irow .ichk { width: 20px; height: 20px; margin-top: 2px; flex: none; accent-color: var(--teal); padding: 0; }
+  .imain { flex: 1; min-width: 0; }
+  .iq { font-size: 13px; color: var(--mute); }
+  .iq b { color: var(--ink); font-weight: 600; }
+  .im { margin-top: 3px; font-weight: 600; }
+  .im .sub { margin-left: 6px; font-weight: 400; }
+  .kbadge { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin-right: 7px; background: var(--k); color: #120f24; vertical-align: 1px; }
+  .isearch { display: flex; gap: 6px; margin-top: 8px; }
+  .isearch input { flex: 1; min-width: 0; padding: 6px 10px; font-size: 14px; }
+  .isearch button { font-size: 13px; padding: 6px 12px; }
+  .ires { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .ires button { font-size: 13px; font-weight: 600; text-align: left; padding: 6px 11px; }
+  .ires button .sub { font-size: 12px; font-weight: 400; margin-left: 4px; }
+  details.isure { margin: 22px 0 90px; color: var(--mute); }
+  details.isure summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+  details.isure ul { columns: 2 260px; font-size: 13px; padding-left: 18px; }
+  .ibar {
+    position: sticky; bottom: 0; z-index: 4; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+    margin: 0 -16px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: rgba(18, 15, 36, .78); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); border-top: 1px solid var(--edge-hi);
+  }
+  .ibar span { color: var(--mute); font-size: 14px; flex: 1 1 220px; }
+  #settings .row-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  #settings .row-btns button { font-size: 13.5px; }
+  @media (max-width: 640px) {
+    .sheet-panel { top: 5vh; width: 100%; border-left: 0; border-top: 1px solid var(--edge-hi); border-radius: 22px 22px 0 0; }
+    .d-top .poster { width: 92px; height: 132px; }
+    .ibar { margin: 0 -12px; }
+  }
+  .hero { cursor: pointer; }
+  #settings .set-h { margin: 16px 0 5px; font-weight: 600; }
+  @media (max-width: 520px) {
+    #libGrid .grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    #libGrid .grid .card { border-radius: 14px; }
+    #libGrid .grid .info { padding: 7px 8px 9px; }
+    #libGrid .grid .card button.title { font-size: 13px; }
+    #libGrid .grid .info .sub { font-size: 12px; }
+    #libGrid .grid .card.lib .pill { top: 6px; left: 6px; font-size: 10px; padding: 1px 6px; }
+  }
 </style>
 </head>
 <body>
@@ -208,7 +346,7 @@
     <button id="settingsBtn" type="button">Settings</button>
     <form id="searchForm">
       <select id="searchKind" aria-label="What to search"></select>
-      <input id="searchInput" type="search" placeholder="Search a title to track…" aria-label="Search">
+      <input id="searchInput" type="search" placeholder="Search a title…" aria-label="Search">
       <button class="primary" type="submit">Search</button>
     </form>
   </div>
@@ -217,13 +355,29 @@
 
 <main id="view"></main>
 
+<div id="detail" class="sheet">
+  <div class="sheet-back"></div>
+  <div class="sheet-panel" id="detailPanel" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+    <div class="sheet-top"><button class="sheet-x" type="button" data-act="close" aria-label="Close">×</button></div>
+    <div id="detailBody"></div>
+  </div>
+</div>
+
 <div id="settings">
-  <div class="box">
+  <div class="box" role="dialog" aria-modal="true" aria-label="Settings">
     <strong>Settings</strong>
     <label for="tmdbKey">TMDB API key (needed for movies only)</label>
     <input id="tmdbKey" type="text" autocomplete="off" spellcheck="false" placeholder="Paste your free TMDB key here">
-    <div class="sub">Free from themoviedb.org → Settings → API. Either the short "API Key" or the long "Read Access Token" works. It is saved only in this browser.</div>
-    <label class="chk"><input id="showAdult" type="checkbox"> Show the 18+ anime section</label>
+    <div class="sub">Free from themoviedb.org, under Settings, then API. Either the short "API Key" or the long "Read Access Token" works. It is saved only in this browser.</div>
+    <label class="chk"><input id="showAdult" type="checkbox"> Show 18+ titles</label>
+    <p class="set-h">Your list</p>
+    <div class="row-btns">
+      <button type="button" data-act="import">Import a spreadsheet</button>
+      <button type="button" data-act="backup">Download backup</button>
+      <button type="button" data-act="restore">Restore backup</button>
+      <input id="restoreFile" type="file" accept=".json,application/json" hidden>
+    </div>
+    <div class="sub">Your list is kept in this browser only. To copy it to your phone, download a backup here and restore it there.</div>
     <div class="row">
       <button id="settingsCancel" type="button">Cancel</button>
       <button id="settingsSave" class="primary" type="button">Save</button>
@@ -231,9 +385,11 @@
   </div>
 </div>
 
+<div id="toast" role="status" aria-live="polite"></div>
+
 <footer>
-  Anime and manga data from AniList. Movie data from TMDB — this product uses the TMDB API but is not endorsed or certified by TMDB.
-  Your tracked list is saved in this browser on this device only.
+  Anime and manga data from AniList. Movie data from TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB.
+  Your list is saved in this browser on this device only.
 </footer>
 
 <script>
@@ -244,37 +400,65 @@ var AL_URL = 'https://graphql.anilist.co';
 var TM_URL = 'https://api.themoviedb.org/3';
 var TM_IMG = 'https://image.tmdb.org/t/p/w342';
 var TM_THUMB = 'https://image.tmdb.org/t/p/w154';
+var XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
 var REFRESH_MS = 5 * 60 * 1000;
+var SEQUEL_MS = 24 * 60 * 60 * 1000;
+var PAGE = 96;
 var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 var COUNTRY = { JP: 'Japanese', CN: 'Chinese', KR: 'Korean', TW: 'Taiwanese' };
 var LANG = { en: 'English', ta: 'Tamil' };
 var FORMAT = { TV: 'TV', TV_SHORT: 'TV short', MOVIE: 'Movie', SPECIAL: 'Special', OVA: 'OVA', ONA: 'ONA', MUSIC: 'Music',
   MANGA: 'Manga', NOVEL: 'Light novel', ONE_SHOT: 'One-shot' };
+var AIR = { FINISHED: 'Finished', RELEASING: 'Releasing', NOT_YET_RELEASED: 'Not yet released', CANCELLED: 'Cancelled', HIATUS: 'On hiatus' };
+var RELATION = { SEQUEL: 'Sequel', PREQUEL: 'Prequel', PARENT: 'Main story', SIDE_STORY: 'Side story', SPIN_OFF: 'Spin-off',
+  ALTERNATIVE: 'Alternative version', SOURCE: 'Source', ADAPTATION: 'Adaptation', SUMMARY: 'Recap' };
+var RELATION_ORDER = Object.keys(RELATION);
+var STATUS_ORDER = ['current', 'planning', 'completed', 'paused', 'dropped'];
 var MEDIA_FIELDS = 'id type format status isAdult countryOfOrigin episodes chapters siteUrl ' +
   'title{romaji english} coverImage{medium large extraLarge} startDate{year month day} nextAiringEpisode{airingAt episode}';
+var DETAIL_Q = 'query($id:Int){Media(id:$id){' + MEDIA_FIELDS + ' description(asHtml:false) genres averageScore ' +
+  'studios(isMain:true){nodes{name}} externalLinks{site url type} relations{edges{relationType node{' + MEDIA_FIELDS + '}}}}}';
+var SEQ_Q = 'query($ids:[Int]){Page(perPage:25){media(id_in:$ids){id relations{edges{relationType node{' + MEDIA_FIELDS + '}}}}}}';
+var BATCH_Q = 'query($ids:[Int]){Page(perPage:50){media(id_in:$ids){' + MEDIA_FIELDS + '}}}';
+var MATCH_FIELDS = 'id title{romaji english} synonyms status format isAdult countryOfOrigin startDate{year}';
+var SYNC_KEYS = ['kind', 'title', 'sub', 'img', 'thumb', 'url', 'total', 'airStatus', 'nextEp', 'nextAt', 'start', 'year'];
 
 /* ---------- storage (falls back to memory if the browser blocks it) ---------- */
 var store = {
   get: function (k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
-  set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ignore */ } }
+  set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
 };
 var settings = Object.assign({ tmdbKey: '', showAdult: false }, store.get('rt.settings', {}));
 var list = store.get('rt.list', []);
 if (!Array.isArray(list)) list = [];
-var ui = Object.assign({ tab: 'home', range: 1, mangaCountry: 'JP', movieLang: 'ta' }, store.get('rt.ui', {}));
-if (ui.tab === 'search') ui.tab = 'home';
+var ui = Object.assign({ tab: 'home', range: 1, mangaCountry: 'JP', movieLang: 'ta', libKind: 'all', libStatus: 'all', libSort: 'title' },
+  store.get('rt.ui', {}));
+if (['home', 'library', 'anime', 'adult', 'manga', 'movies'].indexOf(ui.tab) < 0) ui.tab = 'home';
+var sequels = store.get('rt.sequels', null);
+if (!sequels || !Array.isArray(sequels.items)) sequels = { at: 0, items: [] };
 
-var cache = new Map();      // key -> { t, data }
-var shown = new Map();      // id -> entry currently on screen (so "Track" can find it)
+var cache = new Map();      // request key -> { t, data }
+var known = new Map();      // id -> entry seen on screen, so buttons and the detail panel can find it
+var byId = new Map();       // id -> item on my list
 var renderToken = 0;
 var lastSearch = null;
+var libQuery = '';
+var libLimit = PAGE;
+var imp = null;             // import state
+var detail = { open: false, id: null, entry: null, full: null, error: null, stack: [], token: 0, lastFocus: null, dirty: false, confirmRemove: false };
+var seqRunning = false;
+var toastTimer = null;
 
 /* ---------- small helpers ---------- */
 function $(id) { return document.getElementById(id); }
+function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
   });
+}
+function norm(s) {
+  return String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 }
 function pad(n) { return String(n).padStart(2, '0'); }
 function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
@@ -311,25 +495,42 @@ function fuzzyInfo(sd) {
   var dt = new Date(sd.year, sd.month - 1, sd.day);
   return { at: dt.getTime(), text: fmtDate(dt) };
 }
+function toast(msg) {
+  var el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { el.classList.remove('show'); }, 2800);
+}
+function setStatus(text) { $('status').textContent = text; }
 
 /* ---------- data sources ---------- */
-async function al(query, variables) {
-  var r;
-  try {
-    r = await fetch(AL_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ query: query, variables: variables || {} })
-    });
-  } catch (e) { throw new Error('Could not reach AniList. Check your internet connection.'); }
-  if (r.status === 429) throw new Error('AniList is limiting requests right now. It will try again on the next refresh.');
-  var j;
-  try { j = await r.json(); } catch (e) { throw new Error('AniList sent an unreadable reply (code ' + r.status + ').'); }
-  if (!r.ok || (j && j.errors)) {
-    var msg = j && j.errors && j.errors[0] && j.errors[0].message;
-    throw new Error('AniList error: ' + (msg || r.status));
+async function al(query, variables, opts) {
+  opts = opts || {};
+  for (var attempt = 0; ; attempt++) {
+    var r;
+    try {
+      r = await fetch(AL_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ query: query, variables: variables || {} })
+      });
+    } catch (e) { throw new Error('Could not reach AniList. Check your internet connection.'); }
+    if (r.status === 429) {
+      if (!opts.wait || attempt >= 3) throw new Error('AniList is limiting requests right now. It will try again on the next refresh.');
+      var ra = Number(r.headers.get('Retry-After')) || 60;
+      if (opts.onWait) opts.onWait(ra);
+      await sleep((ra + 1) * 1000);
+      continue;
+    }
+    var j;
+    try { j = await r.json(); } catch (e) { throw new Error('AniList sent an unreadable reply (code ' + r.status + ').'); }
+    if (!r.ok || (j && j.errors)) {
+      var msg = j && j.errors && j.errors[0] && j.errors[0].message;
+      throw new Error('AniList error: ' + (msg || r.status));
+    }
+    return j.data;
   }
-  return j.data;
 }
 async function alCached(key, query, variables) {
   var c = cache.get(key);
@@ -363,49 +564,29 @@ async function tmCached(key, path, params) {
   return data;
 }
 
-/* ---------- turning raw data into one common "entry" shape ---------- */
-function alState(m) {
-  var next = null, latest = null;
-  var manga = m.type === 'MANGA';
-  var n = m.nextAiringEpisode;
-  if (n) {
-    next = { at: n.airingAt * 1000, label: 'Episode ' + n.episode, dateOnly: false };
-    if (n.episode > 1) latest = { token: 'ep' + (n.episode - 1), label: 'Episode ' + (n.episode - 1) + ' is out' };
-  } else if (m.status === 'NOT_YET_RELEASED') {
-    var sd = fuzzyInfo(m.startDate);
-    next = { at: sd ? sd.at : null, label: manga ? 'Starts' : 'Premieres', dateOnly: true, text: sd ? sd.text : 'date to be announced' };
-  }
-  if (!latest) {
-    if (m.status === 'FINISHED') {
-      latest = { token: 'fin', label: manga
-        ? 'Completed' + (m.chapters ? ', ' + m.chapters + ' chapters' : '')
-        : 'Finished' + (m.episodes ? ', ' + m.episodes + ' episodes' : '') };
-    } else if (m.status === 'RELEASING' && !n) {
-      latest = { token: 'rel', label: 'Now releasing' };
-    } else if (m.status === 'CANCELLED') {
-      latest = { token: 'can', label: 'Cancelled' };
-    } else if (m.status === 'HIATUS') {
-      latest = { token: 'hia', label: 'On hiatus' };
-    }
-  }
-  return { next: next, latest: latest };
-}
+/* ---------- one common "entry" shape for anything shown ---------- */
 function alEntry(m) {
   var manga = m.type === 'MANGA';
-  var kind = manga ? 'manga' : (m.isAdult ? 'adult' : 'anime');
   var parts = [];
   if (m.format) parts.push(FORMAT[m.format] || String(m.format).replace(/_/g, ' '));
   if (manga && m.countryOfOrigin) parts.push(COUNTRY[m.countryOfOrigin] || m.countryOfOrigin);
   if (m.isAdult) parts.push('18+');
   var t = m.title || {};
+  var c = m.coverImage || {};
+  var n = m.nextAiringEpisode;
   return {
-    id: 'al-' + m.id, src: 'al', kind: kind,
+    id: 'al-' + m.id, src: 'al', kind: manga ? 'manga' : (m.isAdult ? 'adult' : 'anime'),
     title: t.english || t.romaji || 'Untitled',
     sub: parts.join(', '),
-    img: m.isAdult || !m.coverImage ? null : (m.coverImage.extraLarge || m.coverImage.large || m.coverImage.medium || null),
-    thumb: m.isAdult || !m.coverImage ? null : (m.coverImage.medium || m.coverImage.large || null),
+    img: m.isAdult ? null : (c.extraLarge || c.large || c.medium || null),
+    thumb: m.isAdult ? null : (c.medium || c.large || null),
     url: m.siteUrl || ('https://anilist.co/' + (manga ? 'manga' : 'anime') + '/' + m.id),
-    state: alState(m)
+    total: (manga ? m.chapters : m.episodes) || null,
+    airStatus: m.status || null,
+    nextEp: n ? n.episode : null,
+    nextAt: n ? n.airingAt * 1000 : null,
+    start: m.startDate || null,
+    year: (m.startDate && m.startDate.year) || null
   };
 }
 function tmState(rd) {
@@ -413,7 +594,7 @@ function tmState(rd) {
   var p = String(rd).split('-').map(Number);
   var at = new Date(p[0], p[1] - 1, p[2]).getTime();
   if (isNaN(at)) return { next: null, latest: null };
-  if (at <= Date.now()) return { next: null, latest: { token: 'out', label: 'Released ' + fmtDate(new Date(at)) } };
+  if (at <= Date.now()) return { next: null, latest: { label: 'Released ' + fmtDate(new Date(at)) } };
   return { next: { at: at, label: 'Release', dateOnly: true }, latest: null };
 }
 function tmEntry(mv) {
@@ -426,49 +607,132 @@ function tmEntry(mv) {
     thumb: mv.poster_path ? TM_THUMB + mv.poster_path : null,
     url: 'https://www.themoviedb.org/movie/' + mv.id,
     rd: mv.release_date || '',
-    state: tmState(mv.release_date)
+    overview: mv.overview || '',
+    year: mv.release_date ? Number(String(mv.release_date).slice(0, 4)) : null
   };
 }
-function stateOf(e) { return e.src === 'tm' ? tmState(e.rd) : (e.state || { next: null, latest: null }); }
-
-/* ---------- tracked list ---------- */
-function findItem(id) { for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]; return null; }
-function saveList() { store.set('rt.list', list); }
-function isNew(item) {
-  var st = stateOf(item);
-  if (!st.latest) return false;
-  if (st.latest.token === item.ack) return false;
-  // An airing show that briefly has no next episode listed is not a new release.
-  if (st.latest.token === 'rel' && item.ack && String(item.ack).indexOf('ep') === 0) return false;
-  return true;
+function stateOf(e) {
+  if (e.src === 'tm') return tmState(e.rd);
+  if (e.airStatus === undefined && e.state) return e.state;   // item saved by the older version, until refreshed
+  var manga = e.kind === 'manga';
+  var next = null, latest = null;
+  if (e.nextEp) {
+    next = { at: e.nextAt, label: 'Episode ' + e.nextEp, dateOnly: false };
+    if (e.nextEp > 1) latest = { label: 'Episode ' + (e.nextEp - 1) + ' is out' };
+  } else if (e.airStatus === 'NOT_YET_RELEASED') {
+    var sd = fuzzyInfo(e.start);
+    next = { at: sd ? sd.at : null, label: manga ? 'Starts' : 'Premieres', dateOnly: true, text: sd ? sd.text : 'date to be announced' };
+  }
+  if (!latest) {
+    if (e.airStatus === 'FINISHED') {
+      latest = { label: manga ? 'Completed' + (e.total ? ', ' + e.total + ' chapters' : '') : 'Finished' + (e.total ? ', ' + e.total + ' episodes' : '') };
+    } else if (e.airStatus === 'RELEASING' && !e.nextEp) latest = { label: 'Now releasing' };
+    else if (e.airStatus === 'CANCELLED') latest = { label: 'Cancelled' };
+    else if (e.airStatus === 'HIATUS') latest = { label: 'On hiatus' };
+  }
+  return { next: next, latest: latest };
 }
-function newCount() { return list.filter(isNew).length; }
-function track(entry) {
-  if (findItem(entry.id)) return;
-  var st = stateOf(entry);
-  var item = Object.assign({}, entry, { ack: st.latest ? st.latest.token : null, addedAt: Date.now() });
+function remember(e) { known.set(e.id, e); return e; }
+
+/* ---------- my list ---------- */
+function reindex() { byId = new Map(); list.forEach(function (x) { byId.set(x.id, x); }); }
+function findItem(id) { return byId.get(id) || null; }
+function saveList() { if (!store.set('rt.list', list)) toast('Could not save. Browser storage is full or blocked.'); }
+function visible(x) { return x.kind !== 'adult' || settings.showAdult; }
+function statusLabel(s, e) {
+  var kind = e ? e.kind : 'anime';
+  if (s === 'current') return kind === 'manga' ? 'Reading' : 'Watching';
+  if (s === 'planning') return kind === 'manga' ? 'Plan to read' : 'Plan to watch';
+  if (s === 'completed') return kind === 'movie' ? 'Watched' : 'Completed';
+  if (s === 'paused') return 'On hold';
+  if (s === 'dropped') return 'Dropped';
+  return s;
+}
+function statusChoices(e) { return e.kind === 'movie' ? ['planning', 'completed', 'dropped'] : STATUS_ORDER; }
+function unitWord(e, n) { var w = e.kind === 'manga' ? 'chapter' : 'episode'; return n === 1 ? w : w + 's'; }
+function unitShort(e) { return e.kind === 'manga' ? 'Ch.' : 'Ep'; }
+function avail(e) {
+  if (e.src !== 'al') return null;
+  if (e.kind === 'manga') return e.airStatus === 'FINISHED' ? (e.total || null) : null;
+  if (e.nextEp) return e.nextAt && e.nextAt <= Date.now() ? e.nextEp : e.nextEp - 1;
+  if (e.airStatus === 'FINISHED') return e.total || null;
+  return null;
+}
+function behind(e) { var a = avail(e); return a == null ? 0 : Math.max(0, a - (e.progress || 0)); }
+function progressText(e) {
+  if (e.kind === 'movie') return statusLabel(e.status, e);
+  return unitShort(e) + ' ' + (e.progress || 0) + (e.total ? ' / ' + e.total : '');
+}
+function pct(e) {
+  if (!e.total) return e.status === 'completed' ? 100 : 0;
+  return Math.min(100, Math.round((e.progress || 0) / e.total * 100));
+}
+function defaultStatus(e) { return e.src === 'al' && e.airStatus === 'RELEASING' ? 'current' : 'planning'; }
+function addToLibrary(entry, status) {
+  var have = findItem(entry.id);
+  if (have) return have;
+  var now = Date.now();
+  var item = Object.assign({}, entry, { status: status || defaultStatus(entry), progress: 0, addedAt: now, updatedAt: now, hyd: true });
+  delete item.state; delete item.note;
   list.push(item);
+  byId.set(item.id, item);
+  saveList();
+  return item;
+}
+function removeFromLibrary(id) {
+  list = list.filter(function (x) { return x.id !== id; });
+  byId.delete(id);
   saveList();
 }
-function untrack(id) { list = list.filter(function (x) { return x.id !== id; }); saveList(); }
+function setProgress(item, value) {
+  var v = Math.max(0, Math.floor(Number(value) || 0));
+  if (item.total) v = Math.min(v, item.total);
+  item.progress = v;
+  if (v > 0 && (item.status === 'planning' || item.status === 'paused')) item.status = 'current';
+  if (item.total && v >= item.total) item.status = 'completed';
+  item.updatedAt = Date.now();
+  saveList();
+}
+function setItemStatus(item, s) {
+  if (STATUS_ORDER.indexOf(s) < 0) return;
+  item.status = s;
+  if (s === 'completed' && item.total) item.progress = item.total;
+  item.updatedAt = Date.now();
+  saveList();
+}
+function newCount() {
+  return list.filter(function (x) {
+    return visible(x) && x.status === 'current' && x.src === 'al' && x.kind !== 'manga' && x.airStatus === 'RELEASING' && behind(x) > 0;
+  }).length;
+}
+function updateFrom(m) {
+  var item = findItem('al-' + m.id);
+  if (!item) return;
+  var fresh = alEntry(m);
+  SYNC_KEYS.forEach(function (k) { item[k] = fresh[k]; });
+  item.hyd = true;
+  delete item.state;
+}
 
+/* ---------- keeping my list fresh ---------- */
 async function refreshList() {
   var errors = [];
-  var alIds = list.filter(function (x) { return x.src === 'al'; }).map(function (x) { return Number(x.id.slice(3)); });
-  for (var i = 0; i < alIds.length; i += 50) {
-    var chunk = alIds.slice(i, i + 50);
+  var ids = [], cold = 0;
+  list.forEach(function (x) {
+    if (x.src !== 'al') return;
+    var active = x.airStatus == null || x.airStatus === 'RELEASING' || x.airStatus === 'NOT_YET_RELEASED' || x.airStatus === 'HIATUS';
+    if (active) ids.push(Number(x.id.slice(3)));
+    else if (!x.hyd && cold < 150) { ids.push(Number(x.id.slice(3))); cold++; }
+  });
+  for (var i = 0; i < ids.length; i += 50) {
+    if (i) await sleep(1500);
     try {
-      var d = await al('query($ids:[Int]){Page(perPage:50){media(id_in:$ids){' + MEDIA_FIELDS + '}}}', { ids: chunk });
-      (d.Page.media || []).forEach(function (m) {
-        var item = findItem('al-' + m.id);
-        if (!item) return;
-        var fresh = alEntry(m);
-        item.state = fresh.state; item.sub = fresh.sub; item.title = fresh.title; item.img = fresh.img; item.thumb = fresh.thumb;
-      });
+      var d = await al(BATCH_Q, { ids: ids.slice(i, i + 50) });
+      (d.Page.media || []).forEach(updateFrom);
     } catch (e) { errors.push(e.message); break; }
   }
   if ((settings.tmdbKey || '').trim()) {
-    var movies = list.filter(function (x) { return x.src === 'tm'; });
+    var movies = list.filter(function (x) { return x.src === 'tm' && x.status !== 'completed' && x.status !== 'dropped'; });
     for (var k = 0; k < movies.length; k++) {
       try {
         var mv = await tm('/movie/' + movies[k].id.slice(3), {});
@@ -481,8 +745,49 @@ async function refreshList() {
   saveList();
   return errors;
 }
+async function runSequelCheck(force) {
+  if (seqRunning) return;
+  if (!force && Date.now() - (sequels.at || 0) < SEQUEL_MS) return;
+  var items = list.filter(function (x) { return x.src === 'al' && x.kind !== 'manga' && x.status !== 'dropped'; });
+  if (!items.length) return;
+  seqRunning = true;
+  try {
+    var found = new Map();
+    for (var i = 0; i < items.length; i += 25) {
+      if (i) await sleep(2500);
+      var chunk = items.slice(i, i + 25);
+      var d = await al(SEQ_Q, { ids: chunk.map(function (x) { return Number(x.id.slice(3)); }) }, { wait: true });
+      (d.Page.media || []).forEach(function (m) {
+        var base = findItem('al-' + m.id);
+        ((m.relations && m.relations.edges) || []).forEach(function (ed) {
+          var n = ed.node;
+          if (ed.relationType !== 'SEQUEL' || !n || n.type !== 'ANIME') return;
+          if (n.status !== 'RELEASING' && n.status !== 'NOT_YET_RELEASED') return;
+          var e = alEntry(n);
+          e.note = 'New season of ' + (base ? base.title : 'a show on your list');
+          found.set(e.id, e);
+        });
+      });
+    }
+    sequels = { at: Date.now(), items: Array.from(found.values()) };
+  } catch (e) {
+    sequels.at = Date.now() - SEQUEL_MS + 60 * 60 * 1000;   // try again in an hour
+  }
+  store.set('rt.sequels', sequels);
+  seqRunning = false;
+  if (ui.tab === 'home' && !detail.open) render();
+}
 
-/* ---------- rendering ---------- */
+/* ---------- pieces of the page ---------- */
+function posterHtml(e, small) {
+  var src = small ? (e.thumb || e.img) : e.img;
+  return '<div class="poster">' + (src
+    ? '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">'
+    : '<div class="noimg">' + (e.kind === 'adult' ? '18+' : '') + '</div>') + '</div>';
+}
+function titleBtn(e, cls) {
+  return '<button type="button" class="title' + (cls ? ' ' + cls : '') + '" data-act="open">' + esc(e.title) + '</button>';
+}
 function nextHtml(n) {
   if (!n) return '';
   var lbl = '<span class="lbl">' + esc(n.label) + '</span> ';
@@ -500,54 +805,81 @@ function whenHtml(e) {
   if (nx) out += '<div class="next">' + nx + '</div>';
   return out;
 }
-function posterHtml(e, small) {
-  var src = small ? (e.thumb || e.img) : e.img;
-  return '<div class="poster">' + (src
-    ? '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">'
-    : '<div class="noimg">' + (e.kind === 'adult' ? '18+' : '') + '</div>') + '</div>';
+function libBtn(e) {
+  var it = findItem(e.id);
+  if (it) return '<button type="button" class="track on" data-act="open">✓ ' + esc(statusLabel(it.status, it)) + '</button>';
+  return '<button type="button" class="track" data-act="add">+ Add to list</button>';
 }
-function trackBtn(e) {
-  var tracked = !!findItem(e.id);
-  return '<button type="button" class="track' + (tracked ? ' on' : '') + '" data-act="toggle">' + (tracked ? 'Tracking ✓' : '+ Track') + '</button>';
+function browseCard(e) {
+  remember(e);
+  return '<article class="card k-' + esc(e.kind) + (findItem(e.id) ? ' inlib' : '') + '" data-id="' + esc(e.id) + '" data-mode="browse">' +
+    posterHtml(e) + '<div class="info">' + titleBtn(e) +
+    '<div class="extra"><div class="extra-in"><div class="sub">' + esc(e.sub) + '</div>' +
+    (e.note ? '<div class="note-line">' + esc(e.note) + '</div>' : '') +
+    '<div class="when">' + whenHtml(e) + '</div><div class="btns">' + libBtn(e) + '</div></div></div></div></article>';
 }
-function card(e, mode) {
-  shown.set(e.id, e);
-  var title = '<a class="title" href="' + esc(e.url) + '" target="_blank" rel="noopener">' + esc(e.title) + '</a>';
-  if (mode !== 'list') {
-    return '<article class="card k-' + esc(e.kind) + (findItem(e.id) ? ' tracked' : '') + '" data-id="' + esc(e.id) + '">' + posterHtml(e) +
-      '<div class="info">' + title + '<div class="extra"><div class="extra-in"><div class="sub">' + esc(e.sub) + '</div>' +
-      '<div class="when">' + whenHtml(e) + '</div><div class="btns">' + trackBtn(e) + '</div></div></div></div></article>';
+function libCard(x) {
+  remember(x);
+  return '<article class="card lib k-' + esc(x.kind) + '" data-id="' + esc(x.id) + '" data-mode="lib">' + posterHtml(x) +
+    '<span class="pill s-' + esc(x.status) + '">' + esc(statusLabel(x.status, x)) + '</span>' +
+    '<div class="info">' + titleBtn(x) + '<div class="sub">' + esc(progressText(x)) + '</div>' +
+    (x.kind !== 'movie' ? '<div class="pbar"><i style="width:' + pct(x) + '%"></i></div>' : '') + '</div></article>';
+}
+function rowCard(x, cont) {
+  remember(x);
+  var when;
+  if (cont) {
+    var b = behind(x), a = avail(x);
+    when = '<div class="latest">' + esc(x.kind === 'manga'
+      ? 'On chapter ' + (x.progress || 0) + (x.total ? ' of ' + x.total : '')
+      : b + ' new ' + unitWord(x, b) + '. ' + unitShort(x) + ' ' + a + ' is out, you are on ' + (x.progress || 0) + '.') + '</div>';
+    var nx = nextHtml(stateOf(x).next);
+    if (nx) when += '<div class="next">' + nx + '</div>';
+  } else {
+    when = whenHtml(x);
   }
-  var fresh = isNew(e);
-  var btns = (fresh ? '<button type="button" data-act="seen">Mark seen</button>' : '') + '<button type="button" data-act="remove">Remove</button>';
-  return '<article class="card k-' + esc(e.kind) + (fresh ? ' new' : '') + '" data-id="' + esc(e.id) + '">' + posterHtml(e, true) +
-    '<div class="body">' + title + '<div class="sub">' + esc(e.sub) + '</div><div class="when">' + whenHtml(e) + '</div></div>' +
-    '<div class="btns">' + btns + '</div></article>';
+  var btns = cont
+    ? '<button type="button" data-act="inc1">+1 ' + (x.kind === 'manga' ? 'ch.' : 'ep') + '</button>'
+    : '<span class="pill s-' + esc(x.status) + '">' + esc(statusLabel(x.status, x)) + '</span>';
+  return '<article class="card k-' + esc(x.kind) + '" data-id="' + esc(x.id) + '" data-mode="row">' + posterHtml(x, true) +
+    '<div class="body">' + titleBtn(x) + '<div class="sub">' + esc(x.sub) + '</div><div class="when">' + when + '</div>' +
+    (cont && x.total ? '<div class="pbar"><i style="width:' + pct(x) + '%"></i></div>' : '') +
+    '</div><div class="btns">' + btns + '</div></article>';
 }
-function section(title, entries, mode, emptyText) {
+function rowsSection(title, items, cont, emptyText) {
+  var h = '<h2>' + esc(title) + '</h2>';
+  if (!items.length) return emptyText ? h + '<p class="msg">' + esc(emptyText) + '</p>' : '';
+  return h + '<div class="rows">' + items.map(function (x) { return rowCard(x, cont); }).join('') + '</div>';
+}
+function gridSection(title, entries, emptyText) {
   var h = '<h2>' + esc(title) + '</h2>';
   if (!entries.length) return h + '<p class="msg">' + esc(emptyText || 'Nothing to show.') + '</p>';
-  return h + '<div class="' + (mode === 'list' ? 'rows' : 'grid') + '">' +
-    entries.map(function (e) { return card(e, mode); }).join('') + '</div>';
-}
-function heroHtml(e) {
-  var n = stateOf(e).next, d = new Date(n.at);
-  return '<section class="hero k-' + esc(e.kind) + '">' +
-    (e.img ? '<img class="hero-bg" src="' + esc(e.img) + '" alt="" referrerpolicy="no-referrer">' : '') +
-    posterHtml(e) + '<div class="hero-body">' +
-    '<p class="hero-line">Next up, <b>' + esc(n.label) + '</b> of</p>' +
-    '<a class="hero-title" href="' + esc(e.url) + '" target="_blank" rel="noopener">' + esc(e.title) + '</a>' +
-    '<div class="hero-cd cd" data-at="' + n.at + '"' + (n.dateOnly ? ' data-day="1"' : '') + '>' + esc(n.dateOnly ? relDay(n.at) : rel(n.at)) + '</div>' +
-    '<div class="dt">' + esc(n.dateOnly ? fmtDate(d) : fmtDate(d) + ', ' + fmtTime(d)) + '</div></div></section>';
+  return h + '<div class="grid">' + entries.map(browseCard).join('') + '</div>';
 }
 function byNext(a, b) {
   var x = stateOf(a).next, y = stateOf(b).next;
   var ax = x && x.at != null ? x.at : Infinity, ay = y && y.at != null ? y.at : Infinity;
   return ax - ay;
 }
+function heroHtml(e) {
+  var n = stateOf(e).next, d = new Date(n.at);
+  remember(e);
+  return '<section class="hero card k-' + esc(e.kind) + '" data-id="' + esc(e.id) + '" data-mode="hero">' +
+    (e.img ? '<img class="hero-bg" src="' + esc(e.img) + '" alt="" referrerpolicy="no-referrer">' : '') +
+    posterHtml(e) + '<div class="hero-body">' +
+    '<p class="hero-line">Next up, <b>' + esc(n.label) + '</b> of</p>' + titleBtn(e, 'hero-title') +
+    '<div class="hero-cd cd" data-at="' + n.at + '"' + (n.dateOnly ? ' data-day="1"' : '') + '>' + esc(n.dateOnly ? relDay(n.at) : rel(n.at)) + '</div>' +
+    '<div class="dt">' + esc(n.dateOnly ? fmtDate(d) : fmtDate(d) + ', ' + fmtTime(d)) + '</div></div></section>';
+}
+function keyNote() {
+  return '<div class="note"><b>Movies need a free TMDB key.</b> Create a free account at themoviedb.org, open Settings, then API, ' +
+    'copy the key, and paste it under <b>Settings</b> here. Anime and manga work without it.</div>';
+}
 
+/* ---------- tabs ---------- */
 function tabsDef() {
-  var t = [['home', 'My releases'], ['anime', 'Anime']];
+  var n = list.filter(visible).length;
+  var t = [['home', 'My releases'], ['library', 'My list' + (n ? ' (' + n + ')' : '')], ['anime', 'Anime']];
   if (settings.showAdult) t.push(['adult', '18+ anime']);
   t.push(['manga', 'Manga / Manhua'], ['movies', 'Movies']);
   return t;
@@ -566,37 +898,101 @@ function renderTabs() {
   sel.innerHTML = kinds.map(function (k) { return '<option value="' + k[0] + '">' + k[1] + '</option>'; }).join('');
   if (kinds.some(function (k) { return k[0] === cur; })) sel.value = cur;
 }
-function setStatus(text) { $('status').textContent = text; }
-function keyNote() {
-  return '<div class="note"><b>Movies need a free TMDB key.</b> Create a free account at themoviedb.org, open Settings → API, ' +
-    'copy the key, then paste it under <b>Settings</b> here. Anime and manga work without it.</div>';
-}
 
+/* ---------- home ---------- */
 function renderHome() {
-  if (!list.length) {
-    return '<div class="note"><b>Nothing tracked yet.</b> Open a tab above or search for a title, then press <b>+ Track</b> ' +
-      'on anything you follow. Its next release and countdown will show here.</div>';
+  var mine = list.filter(visible);
+  if (!mine.length) {
+    return '<div class="note"><b>Your list is empty.</b> Import your spreadsheet, or open a tab above and press <b>+ Add to list</b> ' +
+      'on anything you follow. New episodes and release dates for those titles will show up here.' +
+      '<div class="empty-cta"><button type="button" class="primary" data-act="import">Import your list</button></div></div>';
   }
-  var fresh = list.filter(isNew);
-  var rest = list.filter(function (x) { return !isNew(x); });
-  var coming = rest.filter(function (x) { return !!stateOf(x).next; }).sort(byNext);
-  var other = rest.filter(function (x) { return !stateOf(x).next; });
-  var html = '';
-  var cutoff = startOfDay(Date.now());
-  var upNext = list.filter(function (x) {
+  var now = Date.now(), today = startOfDay(now);
+  var contAnime = mine.filter(function (x) { return x.status === 'current' && x.src === 'al' && x.kind !== 'manga' && behind(x) > 0; })
+    .sort(function (a, b) {
+      var ra = a.airStatus === 'RELEASING' ? 0 : 1, rb = b.airStatus === 'RELEASING' ? 0 : 1;
+      return ra - rb || (b.updatedAt || 0) - (a.updatedAt || 0);
+    });
+  var contManga = mine.filter(function (x) { return x.status === 'current' && x.kind === 'manga'; })
+    .sort(function (a, b) { return (b.updatedAt || 0) - (a.updatedAt || 0); });
+  var coming = mine.filter(function (x) {
+    if (x.status !== 'current' && x.status !== 'planning' && x.status !== 'paused') return false;
     var n = stateOf(x).next;
-    return n && n.at != null && n.at >= (n.dateOnly ? cutoff : Date.now());
-  }).sort(byNext)[0];
-  if (upNext) html += heroHtml(upNext);
-  if (fresh.length) {
-    html += section('New since you last checked', fresh, 'list') +
-      '<div class="tools"><button type="button" data-act="seenall">Mark all as seen</button></div>';
+    return n && n.at != null && n.at >= (n.dateOnly ? today : now - 60000);
+  }).sort(byNext);
+  var seq = sequels.items.filter(function (e) { return !findItem(e.id) && visible(e); });
+  var html = '';
+  var hero = coming.find(function (x) { var n = stateOf(x).next; return n.dateOnly ? n.at >= today : n.at >= now; });
+  if (hero) html += heroHtml(hero);
+  html += rowsSection('Continue watching', contAnime, true);
+  html += rowsSection('Continue reading', contManga, true);
+  html += rowsSection('Coming up from your list', coming.slice(0, 40), false);
+  if (seq.length) html += gridSection('New seasons of shows on your list', seq);
+  if (!contAnime.length && !contManga.length && !coming.length && !seq.length) {
+    html += '<div class="note"><b>Nothing airing from your list right now.</b> Open <b>My list</b> and set a show to Watching, ' +
+      'or check back when a new season is announced.</div>';
   }
-  html += section('Coming up', coming, 'list', 'No upcoming dates for your tracked titles.');
-  if (other.length) html += section('Released, or no date yet', other, 'list');
   return html;
 }
 
+/* ---------- my list ---------- */
+function kindMatch(x, k) {
+  if (k === 'all') return true;
+  if (k === 'anime') return x.kind === 'anime' || x.kind === 'adult';
+  return x.kind === k;
+}
+function nextKey(e) { var n = stateOf(e).next; return n && n.at != null ? n.at : Infinity; }
+function libFiltered() {
+  var q = norm(libQuery);
+  var arr = list.filter(function (x) {
+    if (!visible(x) || !kindMatch(x, ui.libKind)) return false;
+    if (ui.libStatus !== 'all' && x.status !== ui.libStatus) return false;
+    if (q && norm(x.title).indexOf(q) < 0) return false;
+    return true;
+  });
+  var s = ui.libSort;
+  arr.sort(function (a, b) {
+    if (s === 'updated') return (b.updatedAt || 0) - (a.updatedAt || 0);
+    if (s === 'added') return (b.addedAt || 0) - (a.addedAt || 0);
+    if (s === 'next') { var d = nextKey(a) - nextKey(b); if (d) return d; }
+    return String(a.title).localeCompare(String(b.title), undefined, { sensitivity: 'base' });
+  });
+  return arr;
+}
+function libGridHtml() {
+  var arr = libFiltered();
+  var html = '<p class="count">' + arr.length + (arr.length === 1 ? ' title' : ' titles') + '</p>';
+  if (!arr.length) return html + '<p class="msg">Nothing matches these filters.</p>';
+  html += '<div class="grid">' + arr.slice(0, libLimit).map(libCard).join('') + '</div>';
+  if (arr.length > libLimit) {
+    html += '<div class="more"><button type="button" data-act="more">Show ' + Math.min(PAGE, arr.length - libLimit) + ' more</button></div>';
+  }
+  return html;
+}
+function renderLibrary() {
+  if (!list.filter(visible).length) {
+    return '<div class="note"><b>Your list is empty.</b> Import your spreadsheet or add titles from the other tabs.' +
+      '<div class="empty-cta"><button type="button" class="primary" data-act="import">Import your list</button></div></div>';
+  }
+  var base = list.filter(function (x) { return visible(x) && kindMatch(x, ui.libKind); });
+  var kinds = [['all', 'Everything'], ['anime', 'Anime'], ['manga', 'Manga'], ['movie', 'Movies']];
+  var statuses = [['all', 'All'], ['current', 'In progress'], ['planning', 'Planned'], ['completed', 'Completed'], ['paused', 'On hold'], ['dropped', 'Dropped']];
+  var html = '<div class="tools">' + kinds.map(function (k) {
+    return '<button type="button" data-libkind="' + k[0] + '" class="' + (ui.libKind === k[0] ? 'on' : '') + '">' + k[1] + '</button>';
+  }).join('') + '</div>';
+  html += '<div class="tools">' + statuses.map(function (s) {
+    var n = s[0] === 'all' ? base.length : base.filter(function (x) { return x.status === s[0]; }).length;
+    return '<button type="button" data-libstatus="' + s[0] + '" class="' + (ui.libStatus === s[0] ? 'on' : '') + '">' + s[1] + ' ' + n + '</button>';
+  }).join('') + '</div>';
+  var sorts = [['title', 'A to Z'], ['updated', 'Recently updated'], ['added', 'Recently added'], ['next', 'Next release']];
+  html += '<div class="tools lib-tools"><input id="libFilter" type="search" placeholder="Filter your list…" aria-label="Filter your list" value="' + esc(libQuery) + '">' +
+    '<select id="libSort" aria-label="Sort">' + sorts.map(function (s) {
+      return '<option value="' + s[0] + '"' + (ui.libSort === s[0] ? ' selected' : '') + '>' + s[1] + '</option>';
+    }).join('') + '</select><button type="button" data-act="import">Import</button></div>';
+  return html + '<div id="libGrid">' + libGridHtml() + '</div>';
+}
+
+/* ---------- browsing tabs ---------- */
 async function renderAnime() {
   var days = [1, 3, 7];
   var range = days.indexOf(ui.range) >= 0 ? ui.range : 1;
@@ -620,58 +1016,45 @@ async function renderAnime() {
   rows.forEach(function (r) {
     var at = r.airingAt * 1000, day = fmtDate(new Date(at));
     if (day !== lastDay) { html += (open ? '</div>' : '') + '<h2 class="day">' + esc(day) + '</h2><div class="rows">'; lastDay = day; open = true; }
-    var e = alEntry(r.media);
-    shown.set(e.id, e);
-    html += '<article class="card slot k-' + esc(e.kind) + '" data-id="' + esc(e.id) + '">' +
+    var e = remember(alEntry(r.media));
+    html += '<article class="card slot k-' + esc(e.kind) + '" data-id="' + esc(e.id) + '" data-mode="browse">' +
       '<div class="time"><b>' + esc(fmtTime(new Date(at))) + '</b><span class="cd" data-at="' + at + '">' + esc(rel(at)) + '</span></div>' +
-      posterHtml(e, true) +
-      '<div class="body"><a class="title" href="' + esc(e.url) + '" target="_blank" rel="noopener">' + esc(e.title) + '</a>' +
+      posterHtml(e, true) + '<div class="body">' + titleBtn(e) +
       '<div class="sub">' + esc('Episode ' + r.episode + (e.sub ? ', ' + e.sub : '')) + '</div></div>' +
-      '<div class="btns">' + trackBtn(e) + '</div></article>';
+      '<div class="btns">' + libBtn(e) + '</div></article>';
   });
   return html + (open ? '</div>' : '');
 }
-
 async function alBrowse(key, args, vars, types) {
   var d = await alCached(key, 'query(' + types + '){Page(perPage:30){media(' + args + '){' + MEDIA_FIELDS + '}}}', vars);
   return (d.Page.media || []).map(alEntry);
 }
-
 async function renderAdult() {
   var today = new Date();
-  var recent = await alBrowse('adult:recent',
-    'type:ANIME,isAdult:true,sort:START_DATE_DESC,startDate_lesser:$to,startDate_greater:$from',
+  var recent = await alBrowse('adult:recent', 'type:ANIME,isAdult:true,sort:START_DATE_DESC,startDate_lesser:$to,startDate_greater:$from',
     { to: fuzzyInt(addDays(today, 1)), from: fuzzyInt(addDays(today, -180)) }, '$to:FuzzyDateInt,$from:FuzzyDateInt');
-  var upcoming = await alBrowse('adult:upcoming',
-    'type:ANIME,isAdult:true,status:NOT_YET_RELEASED,sort:START_DATE,startDate_greater:$from',
+  var upcoming = await alBrowse('adult:upcoming', 'type:ANIME,isAdult:true,status:NOT_YET_RELEASED,sort:START_DATE,startDate_greater:$from',
     { from: fuzzyInt(addDays(today, -1)) }, '$from:FuzzyDateInt');
   return '<div class="note">Release dates for 18+ titles are often added late or left blank on AniList, so this section has gaps.</div>' +
-    section('Upcoming', upcoming, 'browse', 'No upcoming titles with a date listed.') +
-    section('Released in the last 6 months', recent, 'browse', 'Nothing listed.');
+    gridSection('Upcoming', upcoming, 'No upcoming titles with a date listed.') +
+    gridSection('Released in the last 6 months', recent, 'Nothing listed.');
 }
-
 async function renderManga() {
   var c = ui.mangaCountry === 'CN' ? 'CN' : 'JP';
   var today = new Date();
   var types = '$c:CountryCode';
-  var trending = await alBrowse('manga:trend:' + c,
-    'type:MANGA,isAdult:false,countryOfOrigin:$c,status:RELEASING,sort:TRENDING_DESC', { c: c }, types);
-  var fresh = await alBrowse('manga:new:' + c,
-    'type:MANGA,isAdult:false,countryOfOrigin:$c,sort:START_DATE_DESC,startDate_lesser:$to,startDate_greater:$from',
+  var trending = await alBrowse('manga:trend:' + c, 'type:MANGA,isAdult:false,countryOfOrigin:$c,status:RELEASING,sort:TRENDING_DESC', { c: c }, types);
+  var fresh = await alBrowse('manga:new:' + c, 'type:MANGA,isAdult:false,countryOfOrigin:$c,sort:START_DATE_DESC,startDate_lesser:$to,startDate_greater:$from',
     { c: c, to: fuzzyInt(addDays(today, 1)), from: fuzzyInt(addDays(today, -90)) }, types + ',$to:FuzzyDateInt,$from:FuzzyDateInt');
-  var upcoming = await alBrowse('manga:up:' + c,
-    'type:MANGA,isAdult:false,countryOfOrigin:$c,status:NOT_YET_RELEASED,sort:START_DATE,startDate_greater:$from',
+  var upcoming = await alBrowse('manga:up:' + c, 'type:MANGA,isAdult:false,countryOfOrigin:$c,status:NOT_YET_RELEASED,sort:START_DATE,startDate_greater:$from',
     { c: c, from: fuzzyInt(addDays(today, -1)) }, types + ',$from:FuzzyDateInt');
   return '<div class="tools">' +
     '<button type="button" data-country="JP" class="' + (c === 'JP' ? 'on' : '') + '">Japanese (manga)</button>' +
     '<button type="button" data-country="CN" class="' + (c === 'CN' ? 'on' : '') + '">Chinese (manhua)</button></div>' +
-    '<div class="note">This page tracks <b>series</b> (new, ongoing, completed). Chapter-by-chapter alerts are not possible from a web page; ' +
-    'that part is planned for the desktop app.</div>' +
-    section('Trending and ongoing', trending, 'browse') +
-    section('New series (last 90 days)', fresh, 'browse', 'Nothing listed.') +
-    section('Upcoming series', upcoming, 'browse', 'No upcoming series with a date listed.');
+    gridSection('Trending and ongoing', trending) +
+    gridSection('New series (last 90 days)', fresh, 'Nothing listed.') +
+    gridSection('Upcoming series', upcoming, 'No upcoming series with a date listed.');
 }
-
 async function movieWindow(lang, from, to, pages) {
   var out = [];
   for (var p = 1; p <= pages; p++) {
@@ -696,10 +1079,9 @@ async function renderMovies() {
   var coming = await movieWindow(lang, ymd(addDays(today, 1)), ymd(addDays(today, 120)), 2);
   out.sort(function (a, b) { return a.rd < b.rd ? 1 : a.rd > b.rd ? -1 : 0; });
   coming.sort(function (a, b) { return a.rd < b.rd ? -1 : a.rd > b.rd ? 1 : 0; });
-  return tools + section('Coming up (next 4 months)', coming, 'browse', 'No upcoming films listed.') +
-    section('Out now (last 45 days)', out, 'browse', 'Nothing listed.');
+  return tools + gridSection('Coming up (next 4 months)', coming, 'No upcoming films listed.') +
+    gridSection('Out now (last 45 days)', out, 'Nothing listed.');
 }
-
 async function renderSearch() {
   var q = lastSearch.q, kind = lastSearch.kind, results;
   if (kind === 'movie') {
@@ -711,34 +1093,516 @@ async function renderSearch() {
       { q: q, type: kind === 'manga' ? 'MANGA' : 'ANIME', adult: kind === 'adult' });
     results = (d2.Page.media || []).map(alEntry);
   }
-  return section('Search results for "' + q + '"', results, 'browse', 'No matches. Try a different spelling or the original title.');
+  return gridSection('Search results for "' + q + '"', results, 'No matches. Try a different spelling or the original title.');
 }
 
+/* ---------- import ---------- */
+function draftInfo() { var d = store.get('rt.importDraft', null); return d && Array.isArray(d.results) ? d : null; }
+function impMatch(x) { return { id: x.id, kind: x.a ? 'adult' : 'anime', title: x.t, format: x.f, year: x.y || null, status: x.st || null }; }
+function impManga(y) { return { id: y.id, kind: 'manga', title: y.t, format: y.f, year: y.y || null, status: y.st || null }; }
+function buildImport(results, skipped) {
+  return {
+    phase: 'review', skipped: skipped || 0,
+    rows: results.map(function (x) {
+      var r = { q: x.q, include: false, match: null, cat: 'none', suggest: null, results: null, searching: false };
+      if (x.id && x.s >= 0.8) { r.cat = 'sure'; r.match = impMatch(x); r.include = true; }
+      else if (x.id && x.s >= 0.5) { r.cat = 'check'; r.match = impMatch(x); r.include = true; }
+      else if (x.manga) { r.cat = 'manga'; r.match = impManga(x.manga); r.include = true; }
+      else if (x.id) { r.suggest = impMatch(x); }
+      return r;
+    })
+  };
+}
+function impPicks() {
+  var picks = new Map(), already = new Set();
+  imp.rows.forEach(function (r) {
+    if (!r.include || !r.match) return;
+    if (findItem('al-' + r.match.id)) already.add(r.match.id);
+    else picks.set(r.match.id, r.match);
+  });
+  return { picks: picks, already: already.size };
+}
+function kindBadge(kind) {
+  return '<span class="kbadge k-' + esc(kind) + '">' + (kind === 'manga' ? 'Manga' : kind === 'adult' ? '18+' : 'Anime') + '</span>';
+}
+function impRow(r, i) {
+  var m = r.match;
+  var matchHtml = m
+    ? kindBadge(m.kind) + esc(m.title) + '<span class="sub">' + esc([FORMAT[m.format] || m.format, m.year].filter(Boolean).join(', ')) + '</span>'
+    : '<span class="sub">No title picked yet</span>';
+  var sug = !m && r.suggest && !r.results
+    ? '<div class="ires"><button type="button" data-act="iuse" data-k="s">Use: ' + esc(r.suggest.title) + '</button></div>' : '';
+  var res = '';
+  if (r.results) {
+    res = '<div class="ires">' + (r.results.length ? r.results.map(function (o, k) {
+      return '<button type="button" data-act="iuse" data-k="' + k + '">' + esc(o.title) + '<span class="sub">' +
+        esc([o.kind === 'manga' ? 'Manga' : o.kind === 'adult' ? '18+' : 'Anime', FORMAT[o.format] || o.format, o.year].filter(Boolean).join(', ')) + '</span></button>';
+    }).join('') : '<span class="sub">No results. Try a shorter or different name.</span>') + '</div>';
+  }
+  return '<div class="irow" data-i="' + i + '"><input type="checkbox" class="ichk" data-act="iinc" aria-label="Include ' + esc(r.q) + '"' +
+    (r.include ? ' checked' : '') + (m ? '' : ' disabled') + '>' +
+    '<div class="imain"><div class="iq">Your name: <b>' + esc(r.q) + '</b></div><div class="im">' + matchHtml + '</div>' +
+    '<div class="isearch"><input type="search" value="' + esc(r.q) + '" aria-label="Search name for ' + esc(r.q) + '">' +
+    '<button type="button" data-act="ifind"' + (r.searching ? ' disabled' : '') + '>' + (r.searching ? 'Finding…' : 'Find') + '</button></div>' +
+    sug + res + '</div></div>';
+}
+function impSection(title, cat, help) {
+  var rows = [];
+  imp.rows.forEach(function (r, i) { if (r.cat === cat) rows.push(impRow(r, i)); });
+  if (!rows.length) return '';
+  return '<h2>' + esc(title) + ' (' + rows.length + ')</h2><p class="sub">' + esc(help) + '</p>' + rows.join('');
+}
+function impBarHtml() {
+  var p = impPicks();
+  return '<span>' + p.picks.size + (p.picks.size === 1 ? ' title' : ' titles') + ' will be added as Plan to watch or Plan to read.' +
+    (p.already ? ' ' + p.already + ' already on your list.' : '') + '</span>' +
+    '<button type="button" class="primary" data-act="icommit"' + (p.picks.size ? '' : ' disabled') + '>Add ' + p.picks.size + ' to my list</button>';
+}
+function renderImport() {
+  var h = '<h2 class="page">Import your list</h2>';
+  if (!imp) {
+    var d = draftInfo();
+    if (d) {
+      h += '<div class="note"><b>Saved matches found.</b> ' + d.results.length + ' titles from your spreadsheet were matched on ' +
+        esc(fmtDate(new Date(d.at))) + '. Review them, then add them to your list.' +
+        '<div class="empty-cta"><button type="button" class="primary" data-act="ireview">Review and import</button></div></div>';
+    }
+    h += '<div class="note"><b>Import a spreadsheet.</b> Column A holds the title and column B the type (Anime, Manga, Movie or Series). ' +
+      'Movies and series are skipped for now. Matching takes about a minute for every 100 titles.' +
+      '<div class="empty-cta"><label class="filebtn">Choose a file<input id="impFile" type="file" accept=".xlsx,.xls,.csv" hidden></label></div></div>';
+    return h;
+  }
+  if (imp.phase !== 'review') return h + '<p class="msg" id="impProg">' + esc(imp.msg || 'Working…') + '</p>';
+  var c = { sure: 0, check: 0, manga: 0, none: 0 };
+  imp.rows.forEach(function (r) { c[r.cat]++; });
+  h += '<p class="sub">' + c.sure + ' matched, ' + c.check + ' to check, ' + c.manga + ' found as manga or manhwa, ' + c.none + ' not found.' +
+    (imp.skipped ? ' ' + imp.skipped + ' movies and series were skipped.' : '') + '</p>';
+  h += impSection('Check these matches', 'check', 'These are probably right. Untick any that are wrong, or search for the right one.');
+  h += impSection('Found as manga or manhwa', 'manga', 'No anime by these names, but a comic exists. Untick any you did not mean.');
+  h += impSection('Not found', 'none', 'Fix the name and press Find, then pick the right title. Rows left without a title are skipped.');
+  h += '<details class="isure"><summary>Matched automatically (' + c.sure + ')</summary><ul>' +
+    imp.rows.filter(function (r) { return r.cat === 'sure'; }).map(function (r) {
+      return '<li>' + esc(r.q) + (norm(r.q) !== norm(r.match.title) ? ' <span class="sub">as ' + esc(r.match.title) + '</span>' : '') + '</li>';
+    }).join('') + '</ul></details>';
+  h += '<div class="ibar" id="impBar">' + impBarHtml() + '</div>';
+  return h;
+}
+function redrawImpRow(i) {
+  var el = document.querySelector('.irow[data-i="' + i + '"]');
+  if (el) el.outerHTML = impRow(imp.rows[i], i);
+  var bar = $('impBar');
+  if (bar) bar.innerHTML = impBarHtml();
+}
+function impMsg(msg) { if (!imp) return; imp.msg = msg; var el = $('impProg'); if (el) el.textContent = msg; }
+async function impFind(i, q) {
+  var r = imp.rows[i];
+  q = (q || '').trim();
+  if (!q) return;
+  r.searching = true;
+  redrawImpRow(i);
+  try {
+    var f = 'id type format status isAdult title{romaji english} startDate{year}';
+    var d = await al('query($q:String){a:Page(perPage:5){media(search:$q,type:ANIME,sort:SEARCH_MATCH){' + f + '}} ' +
+      'm:Page(perPage:3){media(search:$q,type:MANGA,sort:SEARCH_MATCH){' + f + '}}}', { q: q });
+    r.results = (d.a.media || []).concat(d.m.media || []).map(function (m) {
+      return { id: m.id, kind: m.type === 'MANGA' ? 'manga' : (m.isAdult ? 'adult' : 'anime'),
+        title: (m.title.english || m.title.romaji), format: m.format, year: m.startDate && m.startDate.year, status: m.status };
+    });
+  } catch (e) { r.results = []; toast(e.message); }
+  r.searching = false;
+  if (imp && imp.rows[i] === r) redrawImpRow(i);
+}
+function placeholderItem(mt, now, k) {
+  return {
+    id: 'al-' + mt.id, src: 'al', kind: mt.kind, title: mt.title, sub: FORMAT[mt.format] || '', img: null, thumb: null,
+    url: 'https://anilist.co/' + (mt.kind === 'manga' ? 'manga' : 'anime') + '/' + mt.id,
+    total: null, airStatus: mt.status || null, nextEp: null, nextAt: null, start: null, year: mt.year || null,
+    status: 'planning', progress: 0, addedAt: now + k, updatedAt: now, hyd: false
+  };
+}
+async function hydrate(ids, label) {
+  var batches = Math.ceil(ids.length / 50);
+  for (var i = 0; i < ids.length; i += 50) {
+    if (i) await sleep(2000);
+    impMsg(label + ' ' + (i / 50 + 1) + ' of ' + batches + '…');
+    var d = await al(BATCH_Q, { ids: ids.slice(i, i + 50) }, {
+      wait: true, onWait: function (s) { impMsg('AniList asked us to slow down. Waiting ' + s + ' seconds…'); }
+    });
+    (d.Page.media || []).forEach(updateFrom);
+    saveList();
+  }
+}
+async function commitImport() {
+  var p = impPicks();
+  var ids = Array.from(p.picks.keys());
+  if (!ids.length) return;
+  var now = Date.now();
+  ids.forEach(function (id, k) { list.push(placeholderItem(p.picks.get(id), now, k)); });
+  reindex();
+  saveList();
+  imp.phase = 'adding';
+  render();
+  try {
+    await hydrate(ids, 'Added ' + ids.length + ' titles. Loading covers and episode counts, batch');
+    toast(ids.length + ' titles added to your list.');
+  } catch (e) {
+    toast('Titles added. Some covers will load on the next refresh.');
+  }
+  imp = null;
+  ui.tab = 'library';
+  ui.libStatus = 'all';
+  store.set('rt.ui', ui);
+  render();
+  runSequelCheck(true);
+}
+function loadScript(src) {
+  return new Promise(function (res, rej) {
+    if (window.XLSX) return res();
+    var s = document.createElement('script');
+    s.src = src;
+    s.onload = function () { res(); };
+    s.onerror = function () { rej(new Error('Could not load the spreadsheet reader.')); };
+    document.head.appendChild(s);
+  });
+}
+function matchScore(q, m) {
+  var nq = norm(q), best = 0;
+  var cands = [m.title && m.title.english, m.title && m.title.romaji].concat(m.synonyms || []);
+  for (var i = 0; i < cands.length; i++) {
+    var nc = norm(cands[i]);
+    if (!nc) continue;
+    if (nc === nq) return 1;
+    var a = new Set(nq.split(' ')), b = new Set(nc.split(' ')), inter = 0;
+    a.forEach(function (x) { if (b.has(x)) inter++; });
+    var s = inter / (a.size + b.size - inter);
+    if (nq.length >= 6 && (nc.indexOf(nq) === 0 || nq.indexOf(nc) === 0)) s = Math.max(s, 0.8);
+    if (s > best) best = s;
+  }
+  return Math.round(best * 100) / 100;
+}
+async function searchBatch(names, type) {
+  var vars = {};
+  var decl = names.map(function (n, k) { vars['s' + k] = n; return '$s' + k + ':String'; }).join(',');
+  var body = names.map(function (n, k) {
+    return 'q' + k + ':Page(perPage:4){media(search:$s' + k + ',type:' + type + ',sort:SEARCH_MATCH){' + MATCH_FIELDS + '}}';
+  }).join(' ');
+  var d = await al('query(' + decl + '){' + body + '}', vars, {
+    wait: true, onWait: function (s) { impMsg('AniList asked us to slow down. Waiting ' + s + ' seconds…'); }
+  });
+  return names.map(function (n, k) {
+    var ms = (d['q' + k] && d['q' + k].media) || [], best = null, bs = -1;
+    ms.forEach(function (m) { var s = matchScore(n, m); if (s > bs) { bs = s; best = m; } });
+    return best ? { m: best, s: bs } : null;
+  });
+}
+async function matchTitles(items) {
+  var anime = [], manga = [], skipped = 0, seen = new Set();
+  items.forEach(function (it) {
+    var key = norm(it.name);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    if (/manga|manhwa|manhua|webtoon|comic/i.test(it.type)) manga.push(it.name);
+    else if (!it.type || /anime/i.test(it.type)) anime.push(it.name);
+    else skipped++;
+  });
+  var results = [];
+  for (var i = 0; i < anime.length; i += 8) {
+    if (i) await sleep(2300);
+    var chunk = anime.slice(i, i + 8);
+    var got = await searchBatch(chunk, 'ANIME');
+    chunk.forEach(function (n, k) {
+      var g = got[k];
+      results.push(g ? { q: n, id: g.m.id, t: g.m.title.english || g.m.title.romaji, r: g.m.title.romaji, s: g.s, st: g.m.status,
+        f: g.m.format, a: g.m.isAdult, c: g.m.countryOfOrigin, y: g.m.startDate && g.m.startDate.year } : { q: n, id: null, s: 0 });
+    });
+    impMsg('Matching anime titles… ' + Math.min(i + 8, anime.length) + ' of ' + anime.length);
+  }
+  manga.forEach(function (n) { results.push({ q: n, id: null, s: 0 }); });
+  var weak = results.filter(function (x) { return !x.id || x.s < 0.5; });
+  for (var j = 0; j < weak.length; j += 8) {
+    await sleep(2300);
+    var part = weak.slice(j, j + 8);
+    var got2 = await searchBatch(part.map(function (x) { return x.q; }), 'MANGA');
+    part.forEach(function (x, k) {
+      var g = got2[k];
+      if (g && g.s >= 0.5) x.manga = { id: g.m.id, t: g.m.title.english || g.m.title.romaji, s: g.s, st: g.m.status, f: g.m.format,
+        c: g.m.countryOfOrigin, a: g.m.isAdult, y: g.m.startDate && g.m.startDate.year };
+    });
+    impMsg('Checking the rest as manga… ' + Math.min(j + 8, weak.length) + ' of ' + weak.length);
+  }
+  return { results: results, skipped: skipped };
+}
+async function importFile(file) {
+  imp = { phase: 'matching', msg: 'Reading the file…' };
+  ui.tab = 'import';
+  render();
+  try {
+    await loadScript(XLSX_URL);
+    var wb = window.XLSX.read(await file.arrayBuffer(), { type: 'array' });
+    var ws = wb.Sheets[wb.SheetNames[0]];
+    var rows = window.XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false });
+    var items = [];
+    rows.forEach(function (r, idx) {
+      var name = String(r[0] == null ? '' : r[0]).trim();
+      var type = String(r[1] == null ? '' : r[1]).trim();
+      if (!name || (idx === 0 && /^(name|title)\b/i.test(name))) return;
+      items.push({ name: name, type: type });
+    });
+    if (!items.length) throw new Error('No titles found in column A of the first sheet.');
+    impMsg('Found ' + items.length + ' titles. Matching…');
+    var out = await matchTitles(items);
+    store.set('rt.importDraft', { at: Date.now(), results: out.results, skipped: out.skipped });
+    imp = buildImport(out.results, out.skipped);
+  } catch (e) {
+    imp = null;
+    toast(e.message);
+  }
+  render();
+}
+
+/* ---------- backup and restore ---------- */
+function downloadBackup() {
+  var data = {
+    app: 'release-tracker', v: 1, at: Date.now(),
+    items: list.map(function (x) {
+      return { id: x.id, src: x.src, kind: x.kind, title: x.title, status: x.status, progress: x.progress || 0,
+        addedAt: x.addedAt, updatedAt: x.updatedAt, rd: x.rd };
+    })
+  };
+  var blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'release-tracker-backup-' + ymd(new Date()) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+  toast('Backup of ' + list.length + ' titles downloaded.');
+}
+async function restoreBackup(file) {
+  var data;
+  try { data = JSON.parse(await file.text()); } catch (e) { toast('That file is not a Release Tracker backup.'); return; }
+  if (!data || data.app !== 'release-tracker' || !Array.isArray(data.items)) { toast('That file is not a Release Tracker backup.'); return; }
+  var added = 0, updated = 0, now = Date.now(), toFetch = [];
+  data.items.forEach(function (b, k) {
+    if (!b || typeof b.id !== 'string' || !/^(al|tm)-\d+$/.test(b.id)) return;
+    var have = findItem(b.id);
+    var status = STATUS_ORDER.indexOf(b.status) >= 0 ? b.status : 'planning';
+    var progress = Math.max(0, Math.floor(Number(b.progress) || 0));
+    if (have) {
+      if ((b.updatedAt || 0) > (have.updatedAt || 0)) { have.status = status; have.progress = progress; have.updatedAt = b.updatedAt; updated++; }
+      return;
+    }
+    var item;
+    if (b.src === 'tm' || b.id.indexOf('tm-') === 0) {
+      item = { id: b.id, src: 'tm', kind: 'movie', title: String(b.title || 'Movie'), sub: 'Movie', img: null, thumb: null,
+        url: 'https://www.themoviedb.org/movie/' + b.id.slice(3), rd: b.rd || '', overview: '', year: null };
+    } else {
+      var kind = ['anime', 'manga', 'adult'].indexOf(b.kind) >= 0 ? b.kind : 'anime';
+      item = placeholderItem({ id: Number(b.id.slice(3)), kind: kind, title: String(b.title || 'Untitled'), format: null, status: null, year: null }, now, k);
+      toFetch.push(Number(b.id.slice(3)));
+    }
+    item.status = status;
+    item.progress = progress;
+    item.addedAt = b.addedAt || now + k;
+    item.updatedAt = b.updatedAt || now;
+    list.push(item);
+    added++;
+  });
+  reindex();
+  saveList();
+  toast('Restored: ' + added + ' added, ' + updated + ' updated.');
+  render();
+  if (toFetch.length) {
+    try { await hydrate(toFetch, 'Loading covers, batch'); } catch (e) { /* the next refresh fills the rest */ }
+    render();
+  }
+}
+
+/* ---------- detail panel ---------- */
+function cleanText(s) {
+  if (!s) return '';
+  var html = String(s).replace(/<br\s*\/?>/gi, '\n');
+  var text = new DOMParser().parseFromString(html, 'text/html').body.textContent || '';
+  return text.replace(/\n{3,}/g, '\n\n').trim();
+}
+function entryFor(id) { return findItem(id) || known.get(id) || null; }
+function openDetail(id, mode) {
+  var e = entryFor(id);
+  if (!e) return;
+  if (mode === 'push' && detail.open && detail.id) detail.stack.push(detail.id);
+  else if (mode !== 'back') detail.stack = [];
+  if (!detail.open) detail.lastFocus = document.activeElement;
+  detail.open = true;
+  detail.id = id;
+  detail.entry = e;
+  detail.full = null;
+  detail.error = null;
+  detail.confirmRemove = false;
+  detail.token++;
+  $('detail').classList.add('open');
+  document.body.classList.add('noscroll');
+  drawDetail();
+  $('detailPanel').scrollTop = 0;
+  $('detailPanel').querySelector('.sheet-x').focus();
+  loadDetail(detail.token);
+}
+function closeDetail() {
+  if (!detail.open) return;
+  detail.open = false;
+  detail.token++;
+  detail.stack = [];
+  $('detail').classList.remove('open');
+  document.body.classList.remove('noscroll');
+  if (detail.dirty) { detail.dirty = false; render(); }
+  var f = detail.lastFocus;
+  if (f && document.body.contains(f)) { try { f.focus(); } catch (e) { /* ignore */ } }
+}
+async function loadDetail(token) {
+  var e = detail.entry;
+  try {
+    if (e.src === 'al') {
+      var d = await al(DETAIL_Q, { id: Number(e.id.slice(3)) });
+      if (token !== detail.token) return;
+      var m = d.Media;
+      if (findItem(e.id)) { updateFrom(m); saveList(); }
+      detail.entry = findItem(e.id) || remember(alEntry(m));
+      detail.full = m;
+    } else if (e.src === 'tm' && (settings.tmdbKey || '').trim()) {
+      var mv = await tm('/movie/' + e.id.slice(3), {});
+      if (token !== detail.token) return;
+      detail.full = { description: mv.overview || '', genres: (mv.genres || []).map(function (g) { return g.name; }),
+        runtime: mv.runtime || null, tagline: mv.tagline || '' };
+    } else {
+      return;
+    }
+  } catch (err) {
+    if (token !== detail.token) return;
+    detail.error = err.message === 'NO_KEY' ? null : err.message;
+  }
+  drawDetail();
+}
+function drawDetail(focusAct) {
+  var it = findItem(detail.id);
+  var e = it || detail.entry;
+  var f = detail.full;
+  var st = stateOf(e);
+  var meta = [];
+  if (e.sub) meta.push(e.sub);
+  if (e.year && e.src === 'al') meta.push(String(e.year));
+  if (e.total) meta.push(e.total + ' ' + unitWord(e, e.total));
+  if (e.airStatus && AIR[e.airStatus]) meta.push(AIR[e.airStatus]);
+  if (f && f.runtime) meta.push(f.runtime + ' min');
+  var alt = f && f.title && f.title.romaji && norm(f.title.romaji) !== norm(e.title) ? f.title.romaji : '';
+  var nx = nextHtml(st.next);
+  var h = '<div class="d-hero">' + (e.img ? '<img class="d-bg" src="' + esc(e.img) + '" alt="" referrerpolicy="no-referrer">' : '') +
+    '<div class="d-top k-' + esc(e.kind) + '">' + posterHtml(e) + '<div class="d-head"><h2 id="dTitle">' + esc(e.title) + '</h2>' +
+    (alt ? '<div class="alt">' + esc(alt) + '</div>' : '') +
+    '<div class="d-meta">' + esc(meta.join(', ')) + '</div>' +
+    (nx ? '<div class="when"><div class="next">' + nx + '</div></div>' : (st.latest && e.src === 'tm' ? '<div class="when">' + esc(st.latest.label) + '</div>' : '')) +
+    '</div></div></div><div class="d-body">';
+  if (it) {
+    var choices = statusChoices(it).map(function (s) {
+      return '<option value="' + s + '"' + (s === it.status ? ' selected' : '') + '>' + esc(statusLabel(s, it)) + '</option>';
+    }).join('');
+    h += '<section class="d-sec d-prog"><div class="d-row"><label for="dStatus">Status</label><select id="dStatus">' + choices + '</select></div>';
+    if (it.kind !== 'movie') {
+      var a = avail(it);
+      h += '<div class="stepper"><button type="button" data-act="dec" aria-label="One less">−</button>' +
+        '<input id="dProg" type="number" min="0"' + (it.total ? ' max="' + it.total + '"' : '') + ' inputmode="numeric" value="' + (it.progress || 0) +
+        '" aria-label="' + (it.kind === 'manga' ? 'Chapters read' : 'Episodes watched') + '">' +
+        '<button type="button" data-act="inc" aria-label="One more">+</button>' +
+        '<span class="of">' + esc(it.total ? 'of ' + it.total + ' ' + unitWord(it, it.total) : unitWord(it, 2) + (it.kind === 'manga' ? ' read' : ' watched')) + '</span></div>' +
+        (it.total ? '<div class="pbar big"><i style="width:' + pct(it) + '%"></i></div>' : '') +
+        (a != null && it.airStatus === 'RELEASING' ? '<p class="sub">' + esc(a + ' ' + unitWord(it, a) + ' out so far.') + '</p>' : '');
+    }
+    h += '</section>';
+  } else {
+    h += '<section class="d-sec"><button type="button" class="primary wide" data-act="dadd">Add to my list</button></section>';
+  }
+  if (detail.error) h += '<p class="msg err">' + esc(detail.error) + '</p>';
+  else if (!f && e.src === 'al') h += '<p class="msg">Loading details…</p>';
+  if (f) {
+    var chips = (f.genres || []).map(function (g) { return '<span class="chip">' + esc(g) + '</span>'; });
+    if (f.averageScore) chips.push('<span class="chip">Score ' + f.averageScore + '%</span>');
+    var studios = f.studios && f.studios.nodes ? f.studios.nodes.map(function (s) { return s.name; }) : [];
+    if (studios.length) chips.push('<span class="chip">' + esc(studios.join(', ')) + '</span>');
+    if (chips.length) h += '<section class="d-sec"><div class="chips">' + chips.join('') + '</div></section>';
+    var desc = cleanText(f.description || e.overview);
+    if (desc) h += '<section class="d-sec"><h3>About</h3><p class="desc">' + esc(desc) + '</p></section>';
+    var seenSites = new Set();
+    var links = (f.externalLinks || []).filter(function (l) {
+      if (l.type !== 'STREAMING' || !/^https?:\/\//i.test(l.url || '') || seenSites.has(l.site)) return false;
+      seenSites.add(l.site);
+      return true;
+    });
+    if (links.length) {
+      h += '<section class="d-sec"><h3>Where to watch</h3><div class="chips">' + links.map(function (l) {
+        return '<a class="chip" href="' + esc(l.url) + '" target="_blank" rel="noopener">' + esc(l.site) + '</a>';
+      }).join('') + '</div></section>';
+    }
+    var edges = ((f.relations && f.relations.edges) || []).filter(function (ed) {
+      return RELATION[ed.relationType] && ed.node && (settings.showAdult || !ed.node.isAdult);
+    }).sort(function (x, y) { return RELATION_ORDER.indexOf(x.relationType) - RELATION_ORDER.indexOf(y.relationType); });
+    if (edges.length) {
+      h += '<section class="d-sec"><h3>Seasons and related</h3>' + edges.map(function (ed) {
+        var en = remember(alEntry(ed.node));
+        var mine = findItem(en.id);
+        return '<button type="button" class="rel k-' + esc(en.kind) + '" data-act="dopen" data-id="' + esc(en.id) + '">' + posterHtml(en, true) +
+          '<span class="rel-t"><span class="sub">' + esc([RELATION[ed.relationType], FORMAT[ed.node.format] || '', en.year].filter(Boolean).join(', ')) + '</span>' +
+          '<b>' + esc(en.title) + '</b></span>' +
+          (mine ? '<span class="pill s-' + esc(mine.status) + '">' + esc(statusLabel(mine.status, mine)) + '</span>' : '') + '</button>';
+      }).join('') + '</section>';
+    }
+  } else if (e.overview) {
+    h += '<section class="d-sec"><h3>About</h3><p class="desc">' + esc(e.overview) + '</p></section>';
+  }
+  h += '<div class="d-foot"><span>' + (detail.stack.length ? '<button type="button" data-act="dback">Back</button> ' : '') +
+    '<a href="' + esc(e.url) + '" target="_blank" rel="noopener">Open on ' + (e.src === 'tm' ? 'TMDB' : 'AniList') + '</a></span>' +
+    (it ? '<button type="button" class="danger' + (detail.confirmRemove ? ' confirm' : '') + '" data-act="dremove">' +
+      (detail.confirmRemove ? 'Press again to remove' : 'Remove from my list') + '</button>' : '') + '</div></div>';
+  $('detailBody').innerHTML = h;
+  if (focusAct) {
+    var el = $('detailBody').querySelector('[data-act="' + focusAct + '"]');
+    if (el) el.focus();
+  }
+}
+function detailChanged(focusAct) { detail.dirty = true; detail.confirmRemove = false; drawDetail(focusAct); renderTabs(); }
+
+/* ---------- main render ---------- */
 async function render() {
   var token = ++renderToken;
   var view = $('view');
   renderTabs();
-  shown.clear();
-  if (ui.tab === 'home') { view.innerHTML = renderHome(); return; }
-  if (!view.dataset.tab || view.dataset.tab !== ui.tab + ':' + ui.range + ui.mangaCountry + ui.movieLang) {
-    view.innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>';
-  }
+  var focusId = document.activeElement && view.contains(document.activeElement) ? document.activeElement.id : '';
   var html;
-  try {
-    if (ui.tab === 'anime') html = await renderAnime();
-    else if (ui.tab === 'adult' && settings.showAdult) html = await renderAdult();
-    else if (ui.tab === 'manga') html = await renderManga();
-    else if (ui.tab === 'movies') html = await renderMovies();
-    else if (ui.tab === 'search' && lastSearch) html = await renderSearch();
-    else { ui.tab = 'home'; renderTabs(); html = renderHome(); }
-  } catch (e) {
-    html = '<p class="msg err">' + esc(e.message === 'NO_KEY' ? 'Add your TMDB key in Settings to load movies.' : e.message) + '</p>';
+  if (ui.tab === 'home' || ui.tab === 'library' || ui.tab === 'import') {
+    html = ui.tab === 'home' ? renderHome() : ui.tab === 'library' ? renderLibrary() : renderImport();
+  } else {
+    var key = ui.tab + ':' + ui.range + ui.mangaCountry + ui.movieLang;
+    if (view.dataset.tab !== key) view.innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>';
+    try {
+      if (ui.tab === 'anime') html = await renderAnime();
+      else if (ui.tab === 'adult' && settings.showAdult) html = await renderAdult();
+      else if (ui.tab === 'manga') html = await renderManga();
+      else if (ui.tab === 'movies') html = await renderMovies();
+      else if (ui.tab === 'search' && lastSearch) html = await renderSearch();
+      else { ui.tab = 'home'; renderTabs(); html = renderHome(); }
+    } catch (e) {
+      html = '<p class="msg err">' + esc(e.message === 'NO_KEY' ? 'Add your TMDB key in Settings to load movies.' : e.message) + '</p>';
+    }
+    if (token !== renderToken) return;   // the user moved to another tab meanwhile
   }
-  if (token !== renderToken) return;   // the user moved to another tab meanwhile
   view.innerHTML = html;
   view.dataset.tab = ui.tab + ':' + ui.range + ui.mangaCountry + ui.movieLang;
+  if (focusId) {
+    var f = $(focusId);
+    if (f && view.contains(f)) {
+      f.focus();
+      if (f.type === 'search') { try { f.setSelectionRange(f.value.length, f.value.length); } catch (e) { /* ignore */ } }
+    }
+  }
 }
-
 async function refreshAll(manual) {
   if (manual) cache.clear();
   setStatus('Updating…');
@@ -746,8 +1610,8 @@ async function refreshAll(manual) {
   await render();
   var t = fmtTime(new Date());
   setStatus(errors.length ? 'Problem at ' + t + ': ' + errors[0] : 'Updated ' + t + '. Refreshes every 5 minutes while open.');
+  runSequelCheck(false);
 }
-
 function tickCountdowns() {
   var els = document.querySelectorAll('.cd');
   for (var i = 0; i < els.length; i++) {
@@ -756,46 +1620,164 @@ function tickCountdowns() {
     els[i].textContent = els[i].getAttribute('data-day') ? relDay(at) : rel(at);
   }
 }
+function setTab(tab) {
+  ui.tab = tab;
+  store.set('rt.ui', ui);
+  window.scrollTo(0, 0);
+  render();
+}
 
 /* ---------- events ---------- */
 document.addEventListener('click', function (ev) {
   var t = ev.target;
   if (!(t instanceof Element)) return;
+  if (t.classList.contains('sheet-back')) { closeDetail(); return; }
   var btn = t.closest('button');
-  if (!btn) return;
-
-  if (btn.dataset.tab) { ui.tab = btn.dataset.tab; store.set('rt.ui', ui); render(); return; }
+  if (!btn) {
+    var c = t.closest('.card');
+    if (c && c.dataset.id && !t.closest('a, input, select, label')) openDetail(c.dataset.id);
+    return;
+  }
+  if (btn.disabled) return;
+  if (btn.dataset.tab) { setTab(btn.dataset.tab); return; }
   if (btn.dataset.range) { ui.range = Number(btn.dataset.range); store.set('rt.ui', ui); render(); return; }
   if (btn.dataset.country) { ui.mangaCountry = btn.dataset.country; store.set('rt.ui', ui); render(); return; }
   if (btn.dataset.lang) { ui.movieLang = btn.dataset.lang; store.set('rt.ui', ui); render(); return; }
+  if (btn.dataset.libkind) { ui.libKind = btn.dataset.libkind; ui.libStatus = 'all'; libLimit = PAGE; store.set('rt.ui', ui); render(); return; }
+  if (btn.dataset.libstatus) { ui.libStatus = btn.dataset.libstatus; libLimit = PAGE; store.set('rt.ui', ui); render(); return; }
 
   var act = btn.dataset.act;
   if (!act) return;
-  if (act === 'seenall') {
-    list.forEach(function (x) { var st = stateOf(x); if (st.latest) x.ack = st.latest.token; });
-    saveList(); render(); return;
-  }
   var cardEl = btn.closest('.card');
-  var id = cardEl && cardEl.getAttribute('data-id');
-  if (!id) return;
-  if (act === 'toggle') {
-    if (findItem(id)) untrack(id);
-    else if (shown.get(id)) track(shown.get(id));
-    var on = !!findItem(id);
-    var all = document.querySelectorAll('.card');
-    for (var i = 0; i < all.length; i++) {
-      if (all[i].getAttribute('data-id') !== id) continue;
-      all[i].classList.toggle('tracked', on);
-      var b = all[i].querySelector('button.track');
-      if (b) { b.classList.toggle('on', on); b.textContent = on ? 'Tracking ✓' : '+ Track'; }
+  var id = cardEl && cardEl.dataset.id;
+  var it;
+  switch (act) {
+    case 'open': if (id) openDetail(id); return;
+    case 'add': {
+      var e = id && entryFor(id);
+      if (!e) return;
+      it = addToLibrary(e);
+      toast('Added to your list as ' + statusLabel(it.status, it) + '.');
+      var cards = document.querySelectorAll('.card[data-mode="browse"]');
+      for (var i = 0; i < cards.length; i++) {
+        if (cards[i].dataset.id !== id) continue;
+        cards[i].classList.add('inlib');
+        var b = cards[i].querySelector('.btns');
+        if (b) b.innerHTML = libBtn(e);
+      }
+      renderTabs();
+      return;
     }
-    renderTabs();
-  } else if (act === 'seen') {
-    var item = findItem(id);
-    if (item) { var st = stateOf(item); item.ack = st.latest ? st.latest.token : item.ack; saveList(); }
-    render();
-  } else if (act === 'remove') {
-    untrack(id); render();
+    case 'inc1':
+      it = id && findItem(id);
+      if (!it) return;
+      setProgress(it, (it.progress || 0) + 1);
+      toast(it.title + ': ' + progressText(it) + '.');
+      render();
+      return;
+    case 'more':
+      libLimit += PAGE;
+      $('libGrid').innerHTML = libGridHtml();
+      return;
+    case 'import':
+      $('settings').classList.remove('open');
+      setTab('import');
+      return;
+    case 'ireview': {
+      var d = draftInfo();
+      if (d) imp = buildImport(d.results, d.skipped);
+      render();
+      return;
+    }
+    case 'ifind': {
+      var row = btn.closest('.irow');
+      if (row) impFind(Number(row.dataset.i), row.querySelector('.isearch input').value);
+      return;
+    }
+    case 'iuse': {
+      var row2 = btn.closest('.irow');
+      if (!row2) return;
+      var ri = Number(row2.dataset.i), r = imp.rows[ri], k = btn.dataset.k;
+      r.match = k === 's' ? r.suggest : r.results[Number(k)];
+      r.include = !!r.match;
+      r.results = null;
+      redrawImpRow(ri);
+      return;
+    }
+    case 'icommit': commitImport(); return;
+    case 'backup': downloadBackup(); return;
+    case 'restore': $('restoreFile').click(); return;
+    case 'close': closeDetail(); return;
+    case 'dadd':
+      it = addToLibrary(detail.entry);
+      toast('Added to your list as ' + statusLabel(it.status, it) + '.');
+      detailChanged();
+      return;
+    case 'inc':
+    case 'dec':
+      it = findItem(detail.id);
+      if (!it) return;
+      setProgress(it, (it.progress || 0) + (act === 'inc' ? 1 : -1));
+      detailChanged(act);
+      return;
+    case 'dremove':
+      if (!detail.confirmRemove) { detail.confirmRemove = true; drawDetail('dremove'); return; }
+      removeFromLibrary(detail.id);
+      toast('Removed from your list.');
+      detailChanged();
+      return;
+    case 'dopen': openDetail(btn.dataset.id, 'push'); return;
+    case 'dback': if (detail.stack.length) openDetail(detail.stack.pop(), 'back'); return;
+  }
+});
+
+document.addEventListener('change', function (ev) {
+  var t = ev.target;
+  if (!(t instanceof Element)) return;
+  var it;
+  if (t.id === 'dStatus') {
+    it = findItem(detail.id);
+    if (it) { setItemStatus(it, t.value); detailChanged(); }
+  } else if (t.id === 'dProg') {
+    it = findItem(detail.id);
+    if (it) { setProgress(it, t.value); detailChanged(); }
+  } else if (t.dataset.act === 'iinc') {
+    var row = t.closest('.irow');
+    if (row && imp) { imp.rows[Number(row.dataset.i)].include = t.checked; $('impBar').innerHTML = impBarHtml(); }
+  } else if (t.id === 'libSort') {
+    ui.libSort = t.value;
+    store.set('rt.ui', ui);
+    $('libGrid').innerHTML = libGridHtml();
+  } else if (t.id === 'impFile') {
+    if (t.files && t.files[0]) importFile(t.files[0]);
+  } else if (t.id === 'restoreFile') {
+    if (t.files && t.files[0]) { $('settings').classList.remove('open'); restoreBackup(t.files[0]); }
+    t.value = '';
+  }
+});
+
+document.addEventListener('input', function (ev) {
+  if (ev.target && ev.target.id === 'libFilter') {
+    libQuery = ev.target.value;
+    libLimit = PAGE;
+    $('libGrid').innerHTML = libGridHtml();
+  }
+});
+
+document.addEventListener('keydown', function (ev) {
+  if (ev.key === 'Escape') {
+    if (detail.open) { closeDetail(); return; }
+    if ($('settings').classList.contains('open')) $('settings').classList.remove('open');
+    return;
+  }
+  if (ev.key === 'Enter' && ev.target instanceof Element) {
+    if (ev.target.closest('.isearch')) {
+      ev.preventDefault();
+      var row = ev.target.closest('.irow');
+      if (row) impFind(Number(row.dataset.i), ev.target.value);
+    } else if (ev.target.id === 'dProg') {
+      ev.target.blur();
+    }
   }
 });
 
@@ -824,6 +1806,18 @@ $('settingsSave').addEventListener('click', function () {
 });
 
 /* ---------- start ---------- */
+list.forEach(function (x) {
+  if (!x.status) {
+    var m = /^ep(\d+)$/.exec(x.ack || '');
+    x.status = 'current';
+    x.progress = m ? Number(m[1]) : 0;
+    x.updatedAt = x.addedAt || Date.now();
+  }
+  if (typeof x.progress !== 'number' || !isFinite(x.progress)) x.progress = 0;
+  delete x.ack;
+});
+reindex();
+saveList();
 renderTabs();
 refreshAll(false);
 setInterval(function () { cache.clear(); refreshAll(false); }, REFRESH_MS);
