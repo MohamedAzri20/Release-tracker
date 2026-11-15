@@ -242,7 +242,8 @@
 /* ---------- constants ---------- */
 var AL_URL = 'https://graphql.anilist.co';
 var TM_URL = 'https://api.themoviedb.org/3';
-var TM_IMG = 'https://image.tmdb.org/t/p/w154';
+var TM_IMG = 'https://image.tmdb.org/t/p/w342';
+var TM_THUMB = 'https://image.tmdb.org/t/p/w154';
 var REFRESH_MS = 5 * 60 * 1000;
 var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 var COUNTRY = { JP: 'Japanese', CN: 'Chinese', KR: 'Korean', TW: 'Taiwanese' };
@@ -250,7 +251,7 @@ var LANG = { en: 'English', ta: 'Tamil' };
 var FORMAT = { TV: 'TV', TV_SHORT: 'TV short', MOVIE: 'Movie', SPECIAL: 'Special', OVA: 'OVA', ONA: 'ONA', MUSIC: 'Music',
   MANGA: 'Manga', NOVEL: 'Light novel', ONE_SHOT: 'One-shot' };
 var MEDIA_FIELDS = 'id type format status isAdult countryOfOrigin episodes chapters siteUrl ' +
-  'title{romaji english} coverImage{medium} startDate{year month day} nextAiringEpisode{airingAt episode}';
+  'title{romaji english} coverImage{medium large extraLarge} startDate{year month day} nextAiringEpisode{airingAt episode}';
 
 /* ---------- storage (falls back to memory if the browser blocks it) ---------- */
 var store = {
@@ -401,7 +402,8 @@ function alEntry(m) {
     id: 'al-' + m.id, src: 'al', kind: kind,
     title: t.english || t.romaji || 'Untitled',
     sub: parts.join(', '),
-    img: m.isAdult ? null : (m.coverImage && m.coverImage.medium) || null,
+    img: m.isAdult || !m.coverImage ? null : (m.coverImage.extraLarge || m.coverImage.large || m.coverImage.medium || null),
+    thumb: m.isAdult || !m.coverImage ? null : (m.coverImage.medium || m.coverImage.large || null),
     url: m.siteUrl || ('https://anilist.co/' + (manga ? 'manga' : 'anime') + '/' + m.id),
     state: alState(m)
   };
@@ -421,6 +423,7 @@ function tmEntry(mv) {
     title: mv.title || mv.original_title || 'Untitled',
     sub: ['Movie', lang].filter(Boolean).join(', '),
     img: mv.poster_path ? TM_IMG + mv.poster_path : null,
+    thumb: mv.poster_path ? TM_THUMB + mv.poster_path : null,
     url: 'https://www.themoviedb.org/movie/' + mv.id,
     rd: mv.release_date || '',
     state: tmState(mv.release_date)
@@ -460,7 +463,7 @@ async function refreshList() {
         var item = findItem('al-' + m.id);
         if (!item) return;
         var fresh = alEntry(m);
-        item.state = fresh.state; item.sub = fresh.sub; item.title = fresh.title; item.img = fresh.img;
+        item.state = fresh.state; item.sub = fresh.sub; item.title = fresh.title; item.img = fresh.img; item.thumb = fresh.thumb;
       });
     } catch (e) { errors.push(e.message); break; }
   }
@@ -471,6 +474,7 @@ async function refreshList() {
         var mv = await tm('/movie/' + movies[k].id.slice(3), {});
         movies[k].rd = mv.release_date || '';
         if (mv.title) movies[k].title = mv.title;
+        if (mv.poster_path) { movies[k].img = TM_IMG + mv.poster_path; movies[k].thumb = TM_THUMB + mv.poster_path; }
       } catch (e) { errors.push(e.message); break; }
     }
   }
@@ -496,9 +500,10 @@ function whenHtml(e) {
   if (nx) out += '<div class="next">' + nx + '</div>';
   return out;
 }
-function posterHtml(e) {
-  return '<div class="poster">' + (e.img
-    ? '<img src="' + esc(e.img) + '" alt="" loading="lazy" referrerpolicy="no-referrer">'
+function posterHtml(e, small) {
+  var src = small ? (e.thumb || e.img) : e.img;
+  return '<div class="poster">' + (src
+    ? '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">'
     : '<div class="noimg">' + (e.kind === 'adult' ? '18+' : '') + '</div>') + '</div>';
 }
 function trackBtn(e) {
@@ -515,7 +520,7 @@ function card(e, mode) {
   }
   var fresh = isNew(e);
   var btns = (fresh ? '<button type="button" data-act="seen">Mark seen</button>' : '') + '<button type="button" data-act="remove">Remove</button>';
-  return '<article class="card k-' + esc(e.kind) + (fresh ? ' new' : '') + '" data-id="' + esc(e.id) + '">' + posterHtml(e) +
+  return '<article class="card k-' + esc(e.kind) + (fresh ? ' new' : '') + '" data-id="' + esc(e.id) + '">' + posterHtml(e, true) +
     '<div class="body">' + title + '<div class="sub">' + esc(e.sub) + '</div><div class="when">' + whenHtml(e) + '</div></div>' +
     '<div class="btns">' + btns + '</div></article>';
 }
@@ -619,7 +624,7 @@ async function renderAnime() {
     shown.set(e.id, e);
     html += '<article class="card slot k-' + esc(e.kind) + '" data-id="' + esc(e.id) + '">' +
       '<div class="time"><b>' + esc(fmtTime(new Date(at))) + '</b><span class="cd" data-at="' + at + '">' + esc(rel(at)) + '</span></div>' +
-      posterHtml(e) +
+      posterHtml(e, true) +
       '<div class="body"><a class="title" href="' + esc(e.url) + '" target="_blank" rel="noopener">' + esc(e.title) + '</a>' +
       '<div class="sub">' + esc('Episode ' + r.episode + (e.sub ? ', ' + e.sub : '')) + '</div></div>' +
       '<div class="btns">' + trackBtn(e) + '</div></article>';
